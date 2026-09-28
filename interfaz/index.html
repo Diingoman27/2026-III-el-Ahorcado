@@ -219,139 +219,151 @@
         </div>
       </div>
     </section>
-
-    <section class="panel hidden" id="teacher-panel">
+<section class="panel hidden" id="teacher-panel">
       <h2>Panel de profesor</h2>
-      
-      <form id="word-form" class="auth-form" novalidate>
-        <label for="word-text">Palabra:</label>
-        <input 
-          type="text" 
-          id="word-text" 
-          name="wordText"
-          pattern="^[a-zA-ZñÑáéíóúÁÉÍÓÚüÜ]+$" 
-          title="La palabra solo debe contener letras."
-          required 
-        />
-        
-        <label for="word-difficulty">Dificultad:</label>
-        <select id="word-difficulty" name="wordDifficulty" required>
-          <option value="easy">Fácil</option>
-          <option value="medium">Medio</option>
-          <option value="hard">Difícil</option>
-        </select>
+      <details class="config-card mb-4" open>
+        <summary class="font-bold cursor-pointer text-lg select-none py-2 px-3 bg-gray-50 rounded-lg mb-2">
+          📝 Agregar palabra manualmente
+        </summary>
+        <form id="word-form" class="auth-form p-2" novalidate>
+          <label for="word-text">Palabra:</label>
+          <input 
+            type="text" 
+            id="word-text" 
+            name="wordText"
+            pattern="^[a-zA-ZñÑáéíóúÁÉÍÓÚüÜ]+$" 
+            title="La palabra solo debe contener letras."
+            required 
+          />
+          
+          <label for="word-difficulty">Dificultad:</label>
+          <select id="word-difficulty" name="wordDifficulty" required>
+            <option value="easy">Fácil</option>
+            <option value="medium">Medio</option>
+            <option value="hard">Difícil</option>
+          </select>
 
-        <label for="word-theme">Tema:</label>
-        <input type="text" id="word-theme" name="wordTheme" maxlength="50" placeholder="Ej. Animales" value="General" required />
+          <label for="word-theme">Tema:</label>
+          <input type="text" id="word-theme" name="wordTheme" maxlength="50" placeholder="Ej. Animales" value="General" required />
 
-        <label class="inline-check" for="word-assign-daily">
-          <input type="checkbox" id="word-assign-daily" name="wordAssignDaily" />
-          Usar también como Palabra del Día
-        </label>
-        
-        <div class="auth-actions">
-          <button type="submit" id="add-word-btn">Agregar palabra</button>
-          <button type="button" id="back-to-home-from-teacher-btn" class="secondary-button">Volver</button>
-        </div>
-      </form>
-      <div class="message" id="teacher-message" aria-live="polite"></div>
-
-      <hr class="section-divider">
-      <form id="ai-word-form" class="auth-form config-card" novalidate>
-        <div class="section-heading"><div><span class="eyebrow">Generador IA</span><h3>Crear palabras por tema</h3></div></div>
-        <div class="config-grid">
-          <label for="ai-word-theme">Tema
-            <input id="ai-word-theme" maxlength="50" placeholder="Ej. Ciberseguridad" required>
+          <label class="inline-check" for="word-assign-daily">
+            <input type="checkbox" id="word-assign-daily" name="wordAssignDaily" />
+            Usar también como Palabra del Día
           </label>
-          <label for="ai-word-count">Cantidad
-            <select id="ai-word-count"><option>5</option><option selected>10</option><option>15</option><option>20</option><option>30</option></select>
-          </label>
-          <label for="ai-word-difficulty">Dificultad
-            <select id="ai-word-difficulty"><option value="easy">Fácil</option><option value="medium">Media</option><option value="hard">Difícil</option></select>
-          </label>
-        </div>
-        <div class="auth-actions">
-          <button type="submit" id="generate-ai-words-btn">Generar y guardar palabras</button>
-        </div>
-        <div class="message" id="ai-word-message" aria-live="polite"></div>
-      </form>
-
-      <hr class="section-divider">
-      <div class="teacher-workspace">
-        <div class="section-heading"><div><span class="eyebrow">Banco de contenido</span><h3>Temas y partidas</h3></div></div>
-        <div class="filter-grid">
-          <label for="word-filter">Filtrar palabras
-            <input id="word-filter" type="search" placeholder="Buscar por palabra…" autocomplete="off">
-          </label>
-          <label for="theme-filter">Filtrar por tema
-            <select id="theme-filter"><option value="">Todos los temas</option></select>
-          </label>
-        </div>
-        <div id="teacher-word-bank" class="word-bank" aria-live="polite"></div>
-
-        <form id="game-config-form" class="auth-form config-card">
-          <div class="config-grid">
-            <label for="game-theme">Tema de la partida
-              <input id="game-theme" maxlength="50" placeholder="Ej. Sistema solar" required>
-            </label>
-            <label for="game-word-count">Número de palabras
-              <select id="game-word-count"><option>3</option><option selected>5</option><option>10</option><option>15</option><option>20</option></select>
-            </label>
-            <label for="game-source">Origen
-              <select id="game-source"><option value="manual">Elegir del banco</option><option value="random">Banco por tema</option><option value="ai">Generar con IA</option></select>
-            </label>
-            <label for="game-config-difficulty">Dificultad
-              <select id="game-config-difficulty"><option value="easy">Fácil</option><option value="medium">Media</option><option value="hard">Difícil</option></select>
-            </label>
+          
+          <div class="auth-actions">
+            <button type="submit" id="add-word-btn">Agregar palabra</button>
+            <button type="button" id="back-to-home-from-teacher-btn" class="secondary-button">Volver</button>
           </div>
-          <div class="student-picker" aria-describedby="student-help">
-            <label for="student-filter">Asignar a alumnos</label>
-            <input id="student-filter" type="search" placeholder="Buscar por nombre, usuario o correo..." autocomplete="off">
-            <div id="student-checklist" class="student-checklist" role="group" aria-label="Lista de alumnos"></div>
-            <small id="student-help">Marca uno o varios alumnos. Déjalo sin selección para preparar una partida propia.</small>
+        </form>
+        <div class="message" id="teacher-message" aria-live="polite"></div>
+      </details>
+      <details class="config-card mb-4">
+        <summary class="font-bold cursor-pointer text-lg select-none py-2 px-3 bg-gray-50 rounded-lg mb-2">
+          🤖 Generar palabras por tema (IA)
+        </summary>
+        <form id="ai-word-form" class="auth-form config-card border-0 p-2" novalidate>
+          <div class="section-heading"><div><span class="eyebrow">Generador IA</span><h3>Crear palabras por tema</h3></div></div>
+          <div class="config-grid">
+            <label for="ai-word-theme">Tema
+              <input id="ai-word-theme" maxlength="50" placeholder="Ej. Ciberseguridad" required>
+            </label>
+            <label for="ai-word-count">Cantidad
+              <select id="ai-word-count"><option>5</option><option selected>10</option><option>15</option><option>20</option><option>30</option></select>
+            </label>
+            <label for="ai-word-difficulty">Dificultad
+              <select id="ai-word-difficulty"><option value="easy">Fácil</option><option value="medium">Media</option><option value="hard">Difícil</option></select>
+            </label>
           </div>
           <div class="auth-actions">
-            <button type="submit" id="create-themed-game-btn">Crear y asignar partida</button>
-            <button type="button" id="start-prepared-game-btn" class="secondary-button hidden">Iniciar partida ahora</button>
+            <button type="submit" id="generate-ai-words-btn">Generar y guardar palabras</button>
           </div>
-          <div class="message" id="game-config-message" aria-live="polite"></div>
+          <div class="message" id="ai-word-message" aria-live="polite"></div>
         </form>
+      </details>
 
-        <div class="config-card">
-          <div class="section-heading">
-            <div><span class="eyebrow">Partidas creadas</span><h3>Partidas temáticas</h3></div>
+      <details class="config-card mb-4">
+        <summary class="font-bold cursor-pointer text-lg select-none py-2 px-3 bg-gray-50 rounded-lg mb-2">
+          📚 Banco de contenido y Partidas
+        </summary>
+        <div class="teacher-workspace p-2">
+          <div class="section-heading"><div><span class="eyebrow">Banco de contenido</span><h3>Temas y partidas</h3></div></div>
+          <div class="filter-grid">
+            <label for="word-filter">Filtrar palabras
+              <input id="word-filter" type="search" placeholder="Buscar por palabra…" autocomplete="off">
+            </label>
+            <label for="theme-filter">Filtrar por tema
+              <select id="theme-filter"><option value="">Todos los temas</option></select>
+            </label>
           </div>
-          <div id="assigned-games-list" class="assignment-list" aria-live="polite"></div>
-          <div class="message" id="assigned-games-message" aria-live="polite"></div>
-        </div>
-      </div>
+          <div id="teacher-word-bank" class="word-bank" aria-live="polite"></div>
 
-      <hr class="section-divider">
-      
-      <h3>Establecer Palabra del Día</h3>
-      <form id="daily-word-form" class="auth-form" novalidate>
-        <label for="daily-word-select">Seleccionar palabra:</label>
-        <select id="daily-word-select" name="dailyWordSelect">
-          <option value="">Cargando palabras...</option>
-        </select>
-        <div class="config-grid">
-          <label for="daily-word-text">O escribir palabra nueva
-            <input id="daily-word-text" maxlength="40" pattern="^[a-zA-ZñÑáéíóúÁÉÍÓÚüÜ]+$" placeholder="Ej. algoritmo" autocomplete="off" />
-          </label>
-          <label for="daily-word-theme">Tema
-            <input id="daily-word-theme" maxlength="50" placeholder="Ej. Programación" value="General" />
-          </label>
-          <label for="daily-word-difficulty">Dificultad
-            <select id="daily-word-difficulty">
-              <option value="easy">Fácil</option>
-              <option value="medium">Media</option>
-              <option value="hard">Difícil</option>
-            </select>
-          </label>
+          <form id="game-config-form" class="auth-form config-card">
+            <div class="config-grid">
+              <label for="game-theme">Tema de la partida
+                <input id="game-theme" maxlength="50" placeholder="Ej. Sistema solar" required>
+              </label>
+              <label for="game-word-count">Número de palabras
+                <select id="game-word-count"><option>3</option><option selected>5</option><option>10</option><option>15</option><option>20</option></select>
+              </label>
+              <label for="game-source">Origen
+                <select id="game-source"><option value="manual">Elegir del banco</option><option value="random">Banco por tema</option><option value="ai">Generar con IA</option></select>
+              </label>
+              <label for="game-config-difficulty">Dificultad
+                <select id="game-config-difficulty"><option value="easy">Fácil</option><option value="medium">Media</option><option value="hard">Difícil</option></select>
+              </label>
+            </div>
+            <div class="student-picker" aria-describedby="student-help">
+              <label for="student-filter">Asignar a alumnos</label>
+              <input id="student-filter" type="search" placeholder="Buscar por nombre, usuario o correo..." autocomplete="off">
+              <div id="student-checklist" class="student-checklist" role="group" aria-label="Lista de alumnos"></div>
+              <small id="student-help">Marca uno o varios alumnos. Déjalo sin selección para preparar una partida propia.</small>
+            </div>
+            <div class="auth-actions">
+              <button type="submit" id="create-themed-game-btn">Crear y asignar partida</button>
+              <button type="button" id="start-prepared-game-btn" class="secondary-button hidden">Iniciar partida ahora</button>
+            </div>
+            <div class="message" id="game-config-message" aria-live="polite"></div>
+          </form>
+
+          <div class="config-card">
+            <div class="section-heading">
+              <div><span class="eyebrow">Partidas creadas</span><h3>Partidas temáticas</h3></div>
+            </div>
+            <div id="assigned-games-list" class="assignment-list" aria-live="polite"></div>
+            <div class="message" id="assigned-games-message" aria-live="polite"></div>
+          </div>
         </div>
-        <button type="submit" id="set-daily-word-btn">Establecer como Palabra del Día</button>
-        <div class="message" id="daily-word-message" aria-live="polite"></div>
-      </form>
+      </details>
+
+      <details class="config-card mb-4">
+        <summary class="font-bold cursor-pointer text-lg select-none py-2 px-3 bg-gray-50 rounded-lg mb-2">
+          🌟 Establecer Palabra del Día
+        </summary>
+        <form id="daily-word-form" class="auth-form p-2" novalidate>
+          <label for="daily-word-select">Seleccionar palabra:</label>
+          <select id="daily-word-select" name="dailyWordSelect">
+            <option value="">Cargando palabras...</option>
+          </select>
+          <div class="config-grid">
+            <label for="daily-word-text">O escribir palabra nueva
+              <input id="daily-word-text" maxlength="40" pattern="^[a-zA-ZñÑáéíóúÁÉÍÓÚüÜ]+$" placeholder="Ej. algoritmo" autocomplete="off" />
+            </label>
+            <label for="daily-word-theme">Tema
+              <input id="daily-word-theme" maxlength="50" placeholder="Ej. Programación" value="General" />
+            </label>
+            <label for="daily-word-difficulty">Dificultad
+              <select id="daily-word-difficulty">
+                <option value="easy">Fácil</option>
+                <option value="medium">Media</option>
+                <option value="hard">Difícil</option>
+              </select>
+            </label>
+          </div>
+          <button type="submit" id="set-daily-word-btn">Establecer como Palabra del Día</button>
+          <div class="message" id="daily-word-message" aria-live="polite"></div>
+        </form>
+      </details>
     </section>
 
     <section class="panel hidden" id="speed-challenge-panel">
@@ -372,6 +384,8 @@
             <p id="challenge-difficulty-badge">Dificultad: fácil</p>
           </div>
         </div>
+      </div>
+    </section>
 
         <div class="board">
           <div class="hangman-stage" aria-label="Progreso del ahorcado diario">
