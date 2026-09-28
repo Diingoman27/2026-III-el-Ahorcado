@@ -1,0 +1,55 @@
+import os
+import mimetypes
+
+from pathlib import Path
+from urllib.parse import urlparse, unquote
+from dotenv import load_dotenv
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / '.env')
+mimetypes.add_type("text/javascript", ".mjs")
+
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', os.getenv('JWT_SECRET', ''))
+if not SECRET_KEY:
+    raise RuntimeError('Configura DJANGO_SECRET_KEY (o JWT_SECRET).')
+DEBUG = os.getenv('DEBUG', '').lower() == 'true'
+ALLOWED_HOSTS = [host.strip() for host in os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if host.strip()]
+CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if origin.strip()]
+INSTALLED_APPS = ['django.contrib.contenttypes', 'django.contrib.staticfiles', 'nucleo.apps.CoreConfig']
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+ROOT_URLCONF = 'ahorcado.urls'
+TEMPLATES = [{'BACKEND': 'django.template.backends.django.DjangoTemplates', 'DIRS': [], 'APP_DIRS': True, 'OPTIONS': {}}]
+WSGI_APPLICATION = 'ahorcado.wsgi.application'
+ASGI_APPLICATION = 'ahorcado.asgi.application'
+
+url = os.getenv('DATABASE_URL') or os.getenv('PG_CONNECTION_STRING') or os.getenv('POSTGRES_URL') or os.getenv('POSTGRES_PRISMA_URL')
+if not url:
+    raise RuntimeError('Configura DATABASE_URL o PG_CONNECTION_STRING de PostgreSQL.')
+parsed = urlparse(url)
+DATABASES = {'default': {
+    'ENGINE': 'django.db.backends.postgresql',
+    'NAME': unquote(parsed.path.lstrip('/')),
+    'USER': unquote(parsed.username or ''),
+    'PASSWORD': unquote(parsed.password or ''),
+    'HOST': parsed.hostname or 'localhost',
+    'PORT': parsed.port or 5432,
+    'OPTIONS': {'sslmode': 'require' if 'sslmode=require' in parsed.query else 'prefer'},
+}}
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [BASE_DIR / 'interfaz']
+STATIC_ROOT = BASE_DIR / 'archivos_estaticos'
+STORAGES = {'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage'}}
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+USE_TZ = True
+TIME_ZONE = 'America/Mexico_City'
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+X_FRAME_OPTIONS = 'DENY'
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', '').lower() == 'true'

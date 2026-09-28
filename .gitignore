@@ -1,0 +1,31 @@
+# Dependencias
+# Evita subir miles de archivos de paquetes de node.
+/node_modules
+
+# Variables de entorno
+# Nunca subas tus secretos (contraseñas, API keys, etc.) a un repositorio público.
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs y archivos de sistema operativo
+logs
+*.log
+npm-debug.log*
+
+# Archivos de macOS
+.DS_Store
+.vercel
+
+# Python / Django
+__pycache__/
+*.py[cod]
+.venv/
+/archivos_estaticos/
+/backups/
+/.agents/
+/skills-lock.json
+interfaz/assets/icons/IMG_0020.HEIC
+interfaz/assets/icons/PHOTO-2026-08-19-12-17-56.jpg

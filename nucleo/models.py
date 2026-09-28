@@ -1,0 +1,82 @@
+"""Modelos compatibles con las tablas PostgreSQL de la aplicación anterior."""
+from django.contrib.postgres.fields import ArrayField
+from django.db import models
+from django.utils import timezone
+
+DIFFICULTIES = [('easy', 'Fácil'), ('medium', 'Media'), ('hard', 'Difícil')]
+
+class Player(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    email = models.EmailField(max_length=100, unique=True)
+    password = models.CharField(max_length=200, default='')
+    role = models.CharField(max_length=10, choices=[('student', 'Alumno'), ('teacher', 'Profesor')], default='student')
+    score = models.IntegerField(default=0)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        db_table = 'players'
+
+class Word(models.Model):
+    word = models.TextField(unique=True)
+    difficulty = models.CharField(max_length=10, choices=DIFFICULTIES)
+    theme = models.CharField(max_length=50, default='General')
+    created_by = models.ForeignKey(Player, null=True, blank=True, on_delete=models.SET_NULL, db_column='created_by')
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        db_table = 'words'
+
+class AssignedGame(models.Model):
+    teacher = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='assigned_as_teacher', db_column='teacher_id')
+    student = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='assigned_as_student', db_column='student_id')
+    theme = models.CharField(max_length=50, default='General')
+    difficulty = models.CharField(max_length=10, choices=DIFFICULTIES)
+    word_ids = ArrayField(models.IntegerField(), default=list)
+    current_index = models.IntegerField(default=0)
+    status = models.CharField(max_length=12, default='pending')
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        db_table = 'assigned_games'
+
+class Game(models.Model):
+    player = models.ForeignKey(Player, on_delete=models.CASCADE, db_column='player_id')
+    word = models.ForeignKey(Word, on_delete=models.PROTECT, db_column='word_id')
+    difficulty = models.CharField(max_length=10, choices=DIFFICULTIES)
+    guessed = ArrayField(models.TextField(), default=list)
+    wrong = ArrayField(models.TextField(), default=list)
+    wrong_attempts = models.IntegerField(default=0)
+    attempts = models.IntegerField(default=0)
+    status = models.CharField(max_length=10, default='playing')
+    revealed_hint = models.CharField(max_length=1, null=True, blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    finished_at = models.DateTimeField(null=True, blank=True)
+    assigned_game = models.ForeignKey(AssignedGame, null=True, blank=True, on_delete=models.SET_NULL, db_column='assigned_game_id')
+
+    class Meta:
+        db_table = 'games'
+
+class DailyWord(models.Model):
+    word = models.ForeignKey(Word, on_delete=models.PROTECT, db_column='word_id')
+    set_by = models.ForeignKey(Player, null=True, blank=True, on_delete=models.SET_NULL, db_column='set_by')
+    set_date = models.DateField(default=timezone.localdate)
+    active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        db_table = 'daily_words'
+
+class DailyWordAnswer(models.Model):
+    daily_word = models.ForeignKey(DailyWord, on_delete=models.CASCADE, db_column='daily_word_id')
+    player = models.ForeignKey(Player, on_delete=models.CASCADE, db_column='player_id')
+    answer_letter = models.CharField(max_length=1)
+    response_time_ms = models.IntegerField()
+    points_earned = models.IntegerField(default=0)
+    is_correct = models.BooleanField()
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        db_table = 'daily_word_answers'
+        constraints = [models.UniqueConstraint(fields=['daily_word', 'player'], name='daily_answer_unique')]
