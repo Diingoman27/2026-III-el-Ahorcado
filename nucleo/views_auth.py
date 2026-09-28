@@ -1,6 +1,9 @@
 import re
+import time
+from collections import defaultdict
 
 import bcrypt
+from django.core.cache import cache
 from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.http import JsonResponse
@@ -8,11 +11,35 @@ from django.http import JsonResponse
 from .api import body, endpoint, error, player_data, token_for
 from .models import Player
 
+LOGIN_ATTEMPTS = defaultdict(int)
+
+
+def rate_limited(request):
+    key = f'login:{request.META.get("REMOTE_ADDR", "unknown")}'
+    attempts = cache.get(key, 0)
+    if attempts >= 5:
+        return True
+    return False
+
 
 def check_password(raw, stored):
+    if not isinstance(raw, str):
+        return False
     if stored.startswith('$2'):
         return bcrypt.checkpw(raw.encode(), stored.encode())
     return raw == stored
+
+
+def strong_password(password):
+    if len(password) < 12:
+        return False
+    if not re.search(r'[A-Z]', password):
+        return False
+    if not re.search(r'[a-z]', password):
+        return False
+    if not re.search(r'\d', password):
+        return False
+    return True
 
 
 @endpoint(['POST'])
@@ -30,8 +57,8 @@ def register(request):
         return error('Selecciona explícitamente si la cuenta será Alumno o Profesor.')
     if not re.fullmatch(r'[^\s@]+@[^\s@]+\.[^\s@]+', email):
         return error('El formato del correo electrónico no es válido.')
-    if len(password) < 6:
-        return error('La contraseña debe tener al menos 6 caracteres.')
+    if not strong_password(password):
+        return error('La contraseña debe tener al menos 12 caracteres, incluir mayúsculas, minúsculas y números.')
     try:
         player = Player.objects.create(name=name, first_name=first_name, last_name=last_name,
                                        email=email, role=role,
@@ -48,9 +75,15 @@ def login(request):
     password = str(data.get('password') or '')
     if not credential or not password:
         return error('El usuario/correo y la contraseña son obligatorios.')
+    ip_key = f'login:{request.META.get("REMOTE_ADDR", "unknown")}'
+    if rate_limited(request):
+        return error('Demasiados intentos. Intenta nuevamente en unos minutos.', 429)
     player = Player.objects.filter(Q(name=credential) | Q(email=credential.lower())).first()
     if not player or not check_password(password, player.password):
+        attempts = cache.get(ip_key, 0) + 1
+        cache.set(ip_key, attempts, 300)
         return error('Credenciales incorrectas. Por favor, verifica tu usuario y contraseña.', 401)
+    cache.delete(ip_key)
     if not player.password.startswith('$2'):
         player.password = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
         player.save(update_fields=['password'])
