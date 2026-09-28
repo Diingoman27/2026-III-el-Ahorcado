@@ -5,6 +5,8 @@
   --accent-2: #f59e0b;
   --text: #f8fafc;
   --muted: #cbd5e1;
+  --particle-color: rgba(91, 92, 240, 0.55);
+  --particle-glow: rgba(139, 92, 246, 0.35);
 }
 
 * {
@@ -17,6 +19,49 @@ body {
   font-family: 'Segoe UI', sans-serif;
   background: #1c1c1e;
   color: var(--text);
+  position: relative;
+  isolation: isolate;
+}
+
+.particle-field {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  z-index: -3;
+  pointer-events: none;
+  background: transparent;
+}
+
+.particle {
+  position: absolute;
+  left: var(--left);
+  top: 110%;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--particle-color) 0%, rgba(255, 255, 255, 0.18) 48%, transparent 100%);
+  box-shadow: 0 0 22px var(--particle-glow), 0 0 42px var(--particle-glow);
+  opacity: 0.7;
+  animation: particle-raise var(--duration) ease-in infinite;
+  animation-delay: var(--delay);
+}
+
+@keyframes particle-raise {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.7);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.9;
+  }
+  50% {
+    transform: translate3d(var(--drift-x), -48vh, 0) scale(1.15);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate3d(calc(var(--drift-x) * 0.4), -110vh, 0) scale(0.7);
+    opacity: 0;
+  }
 }
 
 .glass-container {
