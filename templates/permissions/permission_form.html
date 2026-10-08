@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}
+  {% if mode == 'create' %}Nuevo Permiso · Ahorcado UTVAM
+  {% elif mode == 'show' %}Consulta de Permiso · Ahorcado UTVAM
+  {% elif mode == 'update' %}Actualizar Permiso · Ahorcado UTVAM
+  {% elif mode == 'delete' %}Eliminar Permiso · Ahorcado UTVAM
+  {% else %}Permisos · Ahorcado UTVAM{% endif %}
+{% endblock %}
+
+{% block content %}
+<section class="panel" style="max-width: 720px; margin: 0 auto;">
+  <!-- Encabezado con Eyebrow y Badge en Español -->
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+    <div>
+      <div class="eyebrow">
+        {% if mode == 'create' %}Formulario de Registro
+        {% elif mode == 'show' %}Ficha de Información
+        {% elif mode == 'update' %}Edición de Registro
+        {% elif mode == 'delete' %}Confirmación de Seguridad
+        {% endif %}
+      </div>
+
+      <h1 style="font-size: clamp(1.8rem, 4vw, 2.6rem); margin-bottom: 0.5rem;">
+        {% if mode == 'create' %}Crear <span>Nuevo Permiso</span>
+        {% elif mode == 'show' %}Detalle de <span>Permiso #{{ permiso.id }}</span>
+        {% elif mode == 'update' %}Actualizar <span>Permiso #{{ permiso.id }}</span>
+        {% elif mode == 'delete' %}Eliminar <span>Permiso #{{ permiso.id }}</span>
+        {% endif %}
+      </h1>
+
+      <p class="lede" style="margin-bottom: 0;">
+        {% if mode == 'create' %}
+          Completa los datos del formulario para dar de alta un nuevo permiso en el sistema.
+        {% elif mode == 'show' %}
+          Visualización de los campos registrados en modo de solo lectura.
+        {% elif mode == 'update' %}
+          Modifica los valores del permiso y guarda los cambios en la base de datos.
+        {% elif mode == 'delete' %}
+          Verifica los datos del permiso antes de autorizar su eliminación permanente.
+        {% endif %}
+      </p>
+    </div>
+
+    <div>
+      {% if mode == 'create' %}
+        <span class="badge-tag badge-crear">1. Nuevo Permiso</span>
+      {% elif mode == 'show' %}
+        <span class="badge-tag badge-mostrar">2. Consulta / Detalle</span>
+      {% elif mode == 'update' %}
+        <span class="badge-tag badge-actualizar">3. Actualizar Permiso</span>
+      {% elif mode == 'delete' %}
+        <span class="badge-tag badge-eliminar">4. Eliminar Permiso</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Alerta especial únicamente en el paso de Eliminación -->
+  {% if mode == 'delete' %}
+    <div class="alerta alerta-error" style="margin: 1.5rem 0;">
+      <span style="font-size: 1.3rem;">⚠️</span>
+      <div>
+        <strong>Atención: Esta acción no se puede deshacer.</strong>
+        <p style="margin: 4px 0 0; font-size: 0.88rem; color: #fecaca;">
+          El permiso será eliminado de la base de datos y se retirará automáticamente de todos los profesores, alumnos o grupos que lo posean.
+        </p>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Mismo Formulario adaptado a las 4 vistas -->
+  <form method="post" class="auth-form" {% if mode != 'delete' %}novalidate{% endif %} style="margin-top: 1.5rem;">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+      <div class="alerta alerta-error">
+        <span>✕</span>
+        <span>{{ form.non_field_errors }}</span>
+      </div>
+    {% endif %}
+
+    {% for field in form %}
+      <div>
+        <label for="{{ field.id_for_label }}">
+          {{ field.label }}:
+          {% if field.field.required and mode != 'show' and mode != 'delete' %}
+            <span style="color: var(--accent); font-weight: 900;">*</span>
+          {% endif %}
+        </label>
+
+        {{ field }}
+
+        {% if field.help_text and mode != 'show' and mode != 'delete' %}
+          <p class="hint" style="margin-top: 6px; font-size: 0.82rem;">{{ field.help_text }}</p>
+        {% endif %}
+
+        {% if field.errors %}
+          <ul class="errorlist" style="margin-top: 6px;">
+            {% for error in field.errors %}
+              <li>{{ error }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+    {% endfor %}
+
+    <!-- En modo Mostrar se presenta información técnica adicional en español -->
+    {% if mode == 'show' and permiso %}
+      <div class="info-bloque">
+        <div class="eyebrow" style="margin-bottom: 6px;">Uso en programación Django</div>
+        <p style="margin-bottom: 8px; color: var(--text);">
+          Identificador del permiso para comprobaciones en código:
+        </p>
+        <span class="codigo-chip">{{ permiso.content_type.app_label }}.{{ permiso.codename }}</span>
+        <p class="hint" style="margin-top: 8px; font-size: 0.82rem;">
+          Puedes utilizarlo con <code>request.user.has_perm('{{ permiso.content_type.app_label }}.{{ permiso.codename }}')</code> o en decoradores de vista.
+        </p>
+      </div>
+    {% endif %}
+
+    <!-- Botones y Acciones en Español -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--line); gap: 12px; flex-wrap: wrap;">
+      <div>
+        <a href="{% url 'permission_list' %}" class="secondary-button" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+          ← Volver al listado
+        </a>
+      </div>
+
+      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        {% if mode == 'create' %}
+          <button type="submit">
+            Guardar Permiso
+          </button>
+
+        {% elif mode == 'show' %}
+          <a href="{% url 'permission_update' permiso.id %}" class="btn-tabla-editar" style="padding: 14px 20px; border-radius: 16px; font-size: 0.94rem; text-decoration: none;">
+            ✎ Editar Permiso
+          </a>
+          <a href="{% url 'permission_delete' permiso.id %}" class="btn-tabla-eliminar" style="padding: 14px 20px; border-radius: 16px; font-size: 0.94rem; text-decoration: none;">
+            🗑️ Eliminar Permiso
+          </a>
+
+        {% elif mode == 'update' %}
+          <button type="submit">
+            Guardar Cambios
+          </button>
+
+        {% elif mode == 'delete' %}
+          <button type="submit" style="background: linear-gradient(135deg, #ef4444, #b91c1c); box-shadow: 0 10px 24px rgba(239, 68, 68, 0.4);">
+            Confirmar y Eliminar Permiso
+          </button>
+        {% endif %}
+      </div>
+    </div>
+  </form>
+</section>
+{% endblock %}
