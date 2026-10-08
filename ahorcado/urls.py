@@ -1,7 +1,15 @@
 from django.urls import path
+from ahorcado import views_permissions
 from nucleo import views_auth, views_words, views_games, views_daily, views_assignments, views_misc
 
 urlpatterns = [
+    # Módulo de Gestión de Permisos (CRUD: ModelForm + CBV)
+    path('permisos/', views_permissions.PermissionListView.as_view(), name='permission_list'),
+    path('permisos/nuevo/', views_permissions.PermissionCreateView.as_view(), name='permission_create'),
+    path('permisos/<int:pk>/', views_permissions.PermissionDetailView.as_view(), name='permission_detail'),
+    path('permisos/<int:pk>/editar/', views_permissions.PermissionUpdateView.as_view(), name='permission_update'),
+    path('permisos/<int:pk>/eliminar/', views_permissions.PermissionDeleteView.as_view(), name='permission_delete'),
+
     path('api/health', views_misc.health),
     path('api/auth/register', views_auth.register),
     path('api/auth/login', views_auth.login),
