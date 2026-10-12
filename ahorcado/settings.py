@@ -61,16 +61,18 @@ ASGI_APPLICATION = 'ahorcado.asgi.application'
 LOGIN_URL = '/register.html'
 SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
 
+DEFAULT_DB_URL = 'postgresql://postgres.ciassthcelqvmjdajnyt:wWtgrcx8nJ1bWuxz@aws-0-us-east-2.pooler.supabase.com:6543/postgres?sslmode=require'
+
 url = (
+    os.getenv('DATABASE_URL') or
     os.getenv('POSTGRES_PRISMA_URL') or
     os.getenv('POSTGRES_URL') or
-    os.getenv('DATABASE_URL') or
     os.getenv('PG_CONNECTION_STRING') or
-    ''
+    DEFAULT_DB_URL
 ).strip('"\' \n\r')
 
-if not url:
-    raise RuntimeError('Configura DATABASE_URL o POSTGRES_URL de PostgreSQL.')
+if not url or 'izloztttkwcdfrxkqocb' in url:
+    url = DEFAULT_DB_URL
 
 parsed = urlparse(url)
 is_ssl = (
