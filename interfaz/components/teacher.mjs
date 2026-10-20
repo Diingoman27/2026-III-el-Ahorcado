@@ -10,7 +10,8 @@ export function initTeacherPanel({ elements, onWordsLoaded, onStartGame }) {
     aiWordForm, aiWordTheme, aiWordCount, aiWordDifficulty, aiWordMessage,
     dailyWordForm, dailyWordSelect, dailyWordMessage, wordFilter, themeFilter,
     teacherWordBank, gameConfigForm, gameTheme, gameWordCount, gameSource,
-    gameConfigDifficulty, gameConfigMessage, studentFilter, studentChecklist, startPreparedGameBtn,
+    gameConfigDifficulty, gameConfigMessage, studentFilter, studentGradeFilter, studentGroupFilter,
+    selectFilteredStudentsBtn, clearFilteredStudentsBtn, studentChecklist, startPreparedGameBtn,
     assignedGamesList, assignedGamesMessage,
     dailyWordText, dailyWordTheme, dailyWordDifficulty,
   } = elements;
@@ -26,14 +27,56 @@ export function initTeacherPanel({ elements, onWordsLoaded, onStartGame }) {
       fullName: fullName || student.name || 'Alumno',
       username: student.name || '',
       email: student.email || '',
-      searchText: `${fullName} ${student.name || ''} ${student.email || ''}`.toLocaleLowerCase('es'),
+      groupLabel: [student.grade, student.group_name].filter(Boolean).join(' · ') || 'Sin grado/grupo registrado',
+      searchText: `${fullName} ${student.name || ''} ${student.email || ''} ${student.grade || ''} ${student.group_name || ''}`.toLocaleLowerCase('es'),
     };
+  }
+
+  function getFilteredStudents() {
+    const query = studentFilter?.value.trim().toLocaleLowerCase('es') || '';
+    const selectedGrade = studentGradeFilter?.value || '';
+    const selectedGroup = studentGroupFilter?.value || '';
+    return students.filter((student) => {
+      const formatted = formatStudent(student);
+      return (!query || formatted.searchText.includes(query)) &&
+        (!selectedGrade || student.grade === selectedGrade) &&
+        (!selectedGroup || student.group_name === selectedGroup);
+    });
+  }
+
+  function populateStudentGroupFilters() {
+    if (!studentGradeFilter || !studentGroupFilter) return;
+    const currentGrade = studentGradeFilter.value;
+    const currentGroup = studentGroupFilter.value;
+    const grades = [...new Set(students.map((student) => student.grade).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b, 'es'));
+    studentGradeFilter.innerHTML = '<option value="">Todos los grados</option>';
+    grades.forEach((grade) => {
+      const option = document.createElement('option');
+      option.value = grade;
+      option.textContent = grade;
+      studentGradeFilter.appendChild(option);
+    });
+    if (grades.includes(currentGrade)) studentGradeFilter.value = currentGrade;
+
+    const groups = [...new Set(students
+      .filter((student) => !studentGradeFilter.value || student.grade === studentGradeFilter.value)
+      .map((student) => student.group_name)
+      .filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b, 'es'));
+    studentGroupFilter.innerHTML = '<option value="">Todos los grupos</option>';
+    groups.forEach((groupName) => {
+      const option = document.createElement('option');
+      option.value = groupName;
+      option.textContent = groupName;
+      studentGroupFilter.appendChild(option);
+    });
+    if (groups.includes(currentGroup)) studentGroupFilter.value = currentGroup;
   }
 
   function renderStudents() {
     if (!studentChecklist) return;
-    const query = studentFilter?.value.trim().toLocaleLowerCase('es') || '';
-    const filtered = students.filter((student) => !query || formatStudent(student).searchText.includes(query));
+    const filtered = getFilteredStudents();
 
     studentChecklist.innerHTML = '';
     if (!filtered.length) {
@@ -65,7 +108,9 @@ export function initTeacherPanel({ elements, onWordsLoaded, onStartGame }) {
       const name = document.createElement('strong');
       name.textContent = formatted.fullName;
       const meta = document.createElement('small');
-      meta.textContent = [formatted.username && `@${formatted.username}`, formatted.email].filter(Boolean).join(' · ');
+      meta.textContent = [formatted.groupLabel, formatted.username && `@${formatted.username}`, formatted.email]
+        .filter(Boolean)
+        .join(' · ');
       text.append(name, meta);
       row.append(checkbox, text);
       studentChecklist.appendChild(row);
@@ -78,6 +123,7 @@ export function initTeacherPanel({ elements, onWordsLoaded, onStartGame }) {
       const { response, data } = await apiFetch('/api/assignments/students');
       if (!response.ok) return setMessage(gameConfigMessage, data.error || 'No se pudieron cargar los alumnos.');
       students = Array.isArray(data) ? data : [];
+      populateStudentGroupFilters();
       selectedStudentIds.forEach((id) => {
         if (!students.some((student) => String(student.id) === id)) selectedStudentIds.delete(id);
       });
@@ -174,7 +220,14 @@ export function initTeacherPanel({ elements, onWordsLoaded, onStartGame }) {
       const meta = document.createElement('span');
       const current = Number(assignment.current_index || 0);
       const total = Number(assignment.word_count || 0);
-      meta.textContent = `${formatStudentName(assignment)} · ${current}/${total} palabras · ${difficultyLabels[assignment.difficulty] || assignment.difficulty} · ${statusLabels[assignment.status] || assignment.status}`;
+      const groupLabel = [assignment.student_grade, assignment.student_group].filter(Boolean).join(' · ');
+      meta.textContent = [
+        formatStudentName(assignment),
+        groupLabel,
+        `${current}/${total} palabras`,
+        difficultyLabels[assignment.difficulty] || assignment.difficulty,
+        statusLabels[assignment.status] || assignment.status,
+      ].filter(Boolean).join(' · ');
 
       const date = document.createElement('small');
       date.textContent = assignment.created_at ? new Date(assignment.created_at).toLocaleString('es-MX') : '';
@@ -385,6 +438,20 @@ export function initTeacherPanel({ elements, onWordsLoaded, onStartGame }) {
   gameConfigForm?.addEventListener('submit', (event) => { event.preventDefault(); prepareThemedGame(); });
   wordFilter?.addEventListener('input', renderWordBank);
   studentFilter?.addEventListener('input', renderStudents);
+  studentGradeFilter?.addEventListener('change', () => {
+    if (studentGroupFilter) studentGroupFilter.value = '';
+    populateStudentGroupFilters();
+    renderStudents();
+  });
+  studentGroupFilter?.addEventListener('change', renderStudents);
+  selectFilteredStudentsBtn?.addEventListener('click', () => {
+    getFilteredStudents().forEach((student) => selectedStudentIds.add(String(student.id)));
+    renderStudents();
+  });
+  clearFilteredStudentsBtn?.addEventListener('click', () => {
+    getFilteredStudents().forEach((student) => selectedStudentIds.delete(String(student.id)));
+    renderStudents();
+  });
   themeFilter?.addEventListener('change', () => {
     renderWordBank();
     if (themeFilter.value && gameTheme) gameTheme.value = themeFilter.value;

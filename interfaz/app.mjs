@@ -20,10 +20,15 @@ const elements = {
   registerFirstName: document.getElementById('register-first-name'),
   registerLastName: document.getElementById('register-last-name'),
   registerEmail: document.getElementById('register-email'),
+  registerEmailError: document.getElementById('register-email-error'),
   registerRole: document.getElementById('register-role'),
+  studentRegistrationFields: document.getElementById('student-registration-fields'),
+  registerGrade: document.getElementById('register-grade'),
+  registerGroup: document.getElementById('register-group'),
   registerPassword: document.getElementById('register-password'),
   registerMessage: document.getElementById('register-message'),
   backToLoginBtn: document.getElementById('back-to-login'),
+  loginLayout: document.getElementById('login-layout'),
   introPanel: document.getElementById('intro-panel'),
   homePanel: document.getElementById('home-panel'),
   settingsPanel: document.getElementById('settings-panel'),
@@ -77,6 +82,10 @@ const elements = {
   gameConfigDifficulty: document.getElementById('game-config-difficulty'),
   gameConfigMessage: document.getElementById('game-config-message'),
   studentFilter: document.getElementById('student-filter'),
+  studentGradeFilter: document.getElementById('student-grade-filter'),
+  studentGroupFilter: document.getElementById('student-group-filter'),
+  selectFilteredStudentsBtn: document.getElementById('select-filtered-students'),
+  clearFilteredStudentsBtn: document.getElementById('clear-filtered-students'),
   studentChecklist: document.getElementById('student-checklist'),
   startPreparedGameBtn: document.getElementById('start-prepared-game-btn'),
   assignedGamesList: document.getElementById('assigned-games-list'),
@@ -144,7 +153,7 @@ async function setUserSession(data) {
   setState({ token: data.token, user: data.user });
   saveSession(data.token, data.user);
 
-  showPanel(elements.introPanel, false);
+  showPanel(elements.loginLayout, false);
   showPanel(elements.homePanel, true);
   showPanel(elements.settingsPanel, false);
   showPanel(elements.gamePanel, false);
@@ -174,12 +183,13 @@ function logout() {
   clearStoredSession();
   setState({ token: null, user: null });
   elements.settingsBtn?.classList.add('hidden');
+  showPanel(elements.loginLayout, true);
   showPanel(elements.homePanel, false);
   showPanel(elements.settingsPanel, false);
   showPanel(elements.gamePanel, false);
   showPanel(elements.teacherPanel, false);
   showPanel(elements.speedChallengePanel, false);
-  showPanel(elements.introPanel, true);
+  showPanel(elements.loginLayout, true);
   if (elements.authName) elements.authName.value = '';
   if (elements.authPassword) elements.authPassword.value = '';
   setMessage(elements.authMessage, 'Sesión cerrada');
@@ -225,8 +235,37 @@ if (elements.showRegisterBtn) {
 }
 
 if (elements.registerForm) {
+  const updateStudentRegistrationFields = () => {
+    const isStudent = elements.registerRole.value === 'student';
+    elements.studentRegistrationFields?.classList.toggle('hidden', !isStudent);
+    if (elements.registerGrade) elements.registerGrade.required = isStudent;
+    if (elements.registerGroup) elements.registerGroup.required = isStudent;
+  };
+
+  elements.registerRole?.addEventListener('change', updateStudentRegistrationFields);
+  updateStudentRegistrationFields();
+
+  const validateRegistrationEmail = () => {
+    const email = elements.registerEmail;
+    if (!email) return true;
+
+    const invalidFormat = email.value.length > 0 && email.validity.typeMismatch;
+    const message = invalidFormat
+      ? 'Escribe un correo válido, por ejemplo nombre@dominio.com.'
+      : '';
+    email.setCustomValidity(message);
+    if (elements.registerEmailError) {
+      elements.registerEmailError.textContent = message;
+      elements.registerEmailError.classList.toggle('visible', Boolean(message));
+    }
+    return !message;
+  };
+
+  elements.registerEmail?.addEventListener('input', validateRegistrationEmail);
+  elements.registerEmail?.addEventListener('blur', validateRegistrationEmail);
   elements.registerForm.addEventListener('submit', async (event) => {
     event.preventDefault();
+    validateRegistrationEmail();
     if (!elements.registerForm.checkValidity()) {
       elements.registerForm.reportValidity();
       return;
@@ -238,6 +277,8 @@ if (elements.registerForm) {
       last_name: elements.registerLastName.value.trim(),
       email: elements.registerEmail.value.trim().toLowerCase(),
       role: elements.registerRole.value,
+      grade: elements.registerGrade?.value.trim() || '',
+      group_name: elements.registerGroup?.value.trim() || '',
       password: elements.registerPassword.value,
     };
 
@@ -281,13 +322,34 @@ if (elements.speedChallengeBtn) {
 if (elements.teacherBtn) {
   elements.teacherBtn.addEventListener('click', () => {
     showPanel(elements.homePanel, false);
+    elements.teacherPanel?.querySelector('#teacher-menu')?.classList.remove('hidden');
+    elements.teacherPanel?.querySelectorAll('.teacher-module').forEach((module) => module.classList.add('hidden'));
     showPanel(elements.teacherPanel, true);
   });
 }
 
+elements.teacherPanel?.addEventListener('click', (event) => {
+  if (!(event.target instanceof Element)) return;
+
+  const moduleButton = event.target.closest('[data-teacher-module]');
+  if (moduleButton) {
+    const module = document.getElementById(moduleButton.getAttribute('data-teacher-module'));
+    if (!module || !elements.teacherPanel.contains(module)) return;
+    elements.teacherPanel.querySelector('#teacher-menu')?.classList.add('hidden');
+    elements.teacherPanel.querySelectorAll('.teacher-module').forEach((item) => item.classList.add('hidden'));
+    module.classList.remove('hidden');
+    return;
+  }
+
+  if (event.target.closest('[data-back-to-teacher-menu]')) {
+    elements.teacherPanel.querySelectorAll('.teacher-module').forEach((module) => module.classList.add('hidden'));
+    elements.teacherPanel.querySelector('#teacher-menu')?.classList.remove('hidden');
+  }
+});
+
 if (elements.settingsBtn) {
   elements.settingsBtn.addEventListener('click', () => {
-    showPanel(elements.introPanel, false);
+  showPanel(elements.loginLayout, false);
     showPanel(elements.homePanel, false);
     showPanel(elements.gamePanel, false);
     showPanel(elements.teacherPanel, false);
@@ -333,7 +395,7 @@ if (elements.deleteAccountForm) {
       showPanel(elements.gamePanel, false);
       showPanel(elements.teacherPanel, false);
       showPanel(elements.speedChallengePanel, false);
-      showPanel(elements.introPanel, true);
+      showPanel(elements.loginLayout, true);
       setMessage(elements.authMessage, data.message || 'Cuenta eliminada permanentemente.');
       await loadLeaderboard();
     } catch {

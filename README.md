@@ -20,7 +20,7 @@ Los modelos están en `nucleo/models.py` y Django los persiste en PostgreSQL. La
 
 | Modelo | Tabla | Propósito y relaciones |
 | --- | --- | --- |
-| `Player` | `players` | Cuenta de alumno o profesor; nombre y correo únicos, rol y puntuación. |
+| `Player` | `players` | Cuenta de alumno o profesor; nombre y correo únicos, rol y puntuación. Los alumnos guardan grado y grupo para filtrar asignaciones. |
 | `Word` | `words` | Palabra única con dificultad, tema y creador opcional. |
 | `AssignedGame` | `assigned_games` | Actividad de un profesor para un alumno; conserva los IDs de palabras en un arreglo PostgreSQL y el avance/estado. |
 | `Game` | `games` | Partida de un jugador asociada a una palabra y, opcionalmente, a una actividad; guarda letras, intentos, estado y fechas. |
@@ -61,7 +61,7 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-Configura `DATABASE_URL`, `DJANGO_SECRET_KEY` y `JWT_SECRET` en `.env`. El proyecto carga ese archivo automáticamente. Mantenlo privado: contiene las credenciales locales y está excluido del control de versiones.
+Configura `DATABASE_URL`, `DJANGO_SECRET_KEY` y `JWT_SECRET` en `.env`. Para habilitar la recuperación de contraseña, configura `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `EMAIL_USE_TLS` o `EMAIL_USE_SSL`, `DEFAULT_FROM_EMAIL` y `PUBLIC_APP_URL` con la URL pública de la aplicación. El enlace vence en una hora y solo puede usarse una vez. El proyecto carga `.env` automáticamente en local; en producción, define estas variables en la configuración de secretos del proveedor. Mantenlo privado: contiene credenciales y está excluido del control de versiones.
 
 ```bash
 python manage.py migrate
@@ -69,7 +69,7 @@ python manage.py seed_words
 python manage.py runserver 4000
 ```
 
-Visita `http://localhost:4000/`. Gemini es opcional y usa `GEMINI_API_KEY`.
+Visita `http://localhost:4000/`. La recuperación de contraseña requiere SMTP; el registro directo y el inicio de sesión no dependen del correo. Gemini es opcional y usa `GEMINI_API_KEY`.
 
 En esta Mac se instaló PostgreSQL 17 con Homebrew como servicio de inicio de sesión. La base local se llama `ahorcado_django`, usa el rol `ahorcado_app` y su conexión está en `.env`. Ya tiene las migraciones y las 15 palabras iniciales. Para comprobar el servicio o iniciarlo manualmente:
 

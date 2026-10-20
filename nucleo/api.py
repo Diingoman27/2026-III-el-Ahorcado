@@ -77,7 +77,9 @@ def endpoint(methods, auth=False, teacher=False):
 
 
 def player_data(player):
-    return {key: getattr(player, key) for key in ('id', 'name', 'first_name', 'last_name', 'email', 'role', 'score')}
+    return {key: getattr(player, key) for key in (
+        'id', 'name', 'first_name', 'last_name', 'email', 'role', 'grade', 'group_name', 'score'
+    )}
 
 
 def word_data(word):
