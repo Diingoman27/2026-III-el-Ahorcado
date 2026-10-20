@@ -12,11 +12,24 @@ class Player(models.Model):
     email = models.EmailField(max_length=100, unique=True)
     password = models.CharField(max_length=200, default='')
     role = models.CharField(max_length=10, choices=[('student', 'Alumno'), ('teacher', 'Profesor')], default='student')
+    grade = models.CharField(max_length=30, blank=True, default='')
+    group_name = models.CharField(max_length=20, blank=True, default='')
     score = models.IntegerField(default=0)
     created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         db_table = 'players'
+
+
+class PasswordResetToken(models.Model):
+    player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='password_reset_tokens')
+    token_hash = models.CharField(max_length=64, unique=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    expires_at = models.DateTimeField()
+
+    class Meta:
+        db_table = 'password_reset_tokens'
+
 
 class Word(models.Model):
     word = models.TextField(unique=True)

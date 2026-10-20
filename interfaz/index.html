@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <title>Ahorcado UTVAM</title>
-  <link rel="stylesheet" href="/static/styles.css" />
+  <link rel="stylesheet" href="/static/styles.css?v=20261016-student-groups" />
 </head>
 <body>
   <div class="particle-field" id="particle-field" aria-hidden="true"></div>
@@ -29,61 +29,56 @@
   </header>
   <main class="app">
     
-    <section class="panel" id="intro-panel">
-      <div class="eyebrow">Aprende · compite · supera tu récord</div>
-      <h1>Descubre la palabra.<br><span>Antes del último intento.</span></h1>
-      <p class="lede">Una experiencia de vocabulario para estudiantes y profesores de UTVAM.</p>
-      
-      <div id="login-view">
-        <form id="login-form" class="auth-form" novalidate>
-          <label for="auth-name">Usuario o correo:</label>
-          <input 
-            type="text" 
-            id="auth-name" 
-            name="credential"
-            maxlength="100" 
-            title="Ingresa tu usuario o correo electrónico."
-            autocomplete="username"
-            required 
-          />
-          
-          <label for="auth-password">Contraseña:</label>
-          <input 
-            type="password" 
-            id="auth-password" 
-            name="password"
-            autocomplete="current-password"
-            required 
-          />
-          
-          <div class="auth-actions">
-            <button type="submit" id="login-btn">Iniciar sesión</button>
-            <button type="button" id="show-register-btn" class="secondary-button">Registrarse</button>
-          </div>
-        </form>
-      </div>
+    <div class="login-layout" id="login-layout">
+      <section class="panel" id="intro-panel">
+        <div class="eyebrow">Aprende · compite · supera tu récord</div>
+        <h1>Descubre la palabra.<br><span>Antes del último intento.</span></h1>
+        <p class="lede">Una experiencia de vocabulario para estudiantes y profesores de UTVAM.</p>
 
-      <div class="message" id="auth-message" aria-live="polite"></div>
-      
-      <div class="leaderboard" id="leaderboard">
-        <div class="section-heading"><div><span class="eyebrow">Comunidad</span><h2>Ranking general</h2></div><span class="live-dot">En vivo</span></div>
-        <ol id="ranking-list"></ol>
-      </div>
+        <div id="login-view">
+          <form id="login-form" class="auth-form" novalidate>
+            <label for="auth-name">Usuario o correo:</label>
+            <input
+              type="text"
+              id="auth-name"
+              name="credential"
+              maxlength="100"
+              title="Ingresa tu usuario o correo electrónico."
+              autocomplete="username"
+              required
+            />
 
-      <div class="screen-credits" aria-label="Créditos de los creadores">
-        <span class="credits-title">Creadores:</span>
-        <div class="creator-credits">
-          <div class="creator-credit">
-            <img src="/static/assets/creators/joshua-torres.jpg" alt="Joshua Torres" />
-            <span>Joshua Torres · 5561042358</span>
-          </div>
-          <div class="creator-credit">
-            <img src="/static/assets/creators/diego-hernandez.jpg" alt="Diego Hernandez" />
-            <span>Diego Hernandez · 5575412997</span>
-          </div>
+            <label for="auth-password">Contraseña:</label>
+            <input
+              type="password"
+              id="auth-password"
+              name="password"
+              autocomplete="current-password"
+              required
+            />
+
+            <div class="auth-actions">
+              <button type="submit" id="login-btn">Iniciar sesión</button>
+              <button type="button" id="show-register-btn" class="secondary-button">Registrarse</button>
+            </div>
+            <a class="password-recovery-link" href="/password-recovery.html">¿Olvidaste tu contraseña?</a>
+          </form>
         </div>
-      </div>
-    </section>
+
+        <div class="message" id="auth-message" aria-live="polite"></div>
+
+      </section>
+
+      <section class="panel leaderboard-panel" aria-labelledby="ranking-title">
+        <div class="section-heading">
+          <div><span class="eyebrow">Comunidad</span><h2 id="ranking-title">Ranking general</h2></div>
+          <span class="live-dot">En vivo</span>
+        </div>
+        <div class="leaderboard" id="leaderboard">
+          <ol id="ranking-list"></ol>
+        </div>
+      </section>
+    </div>
 
     <section class="panel hidden" id="home-panel">
       <h1>Bienvenido, <span id="welcome-name"></span></h1>
@@ -220,75 +215,112 @@
         </div>
       </div>
     </section>
-<section class="panel hidden" id="teacher-panel">
-      <h2>Panel de profesor</h2>
-      <details class="config-card mb-4" open>
-        <summary class="font-bold cursor-pointer text-lg select-none py-2 px-3 bg-gray-50 rounded-lg mb-2">
-          📝 Agregar palabra manualmente
-        </summary>
-        <form id="word-form" class="auth-form p-2" novalidate>
-          <label for="word-text">Palabra:</label>
-          <input 
-            type="text" 
-            id="word-text" 
-            name="wordText"
-            pattern="^[a-zA-ZñÑáéíóúÁÉÍÓÚüÜ]+$" 
-            title="La palabra solo debe contener letras."
-            required 
-          />
-          
-          <label for="word-difficulty">Dificultad:</label>
-          <select id="word-difficulty" name="wordDifficulty" required>
-            <option value="easy">Fácil</option>
-            <option value="medium">Medio</option>
-            <option value="hard">Difícil</option>
-          </select>
+    <section class="panel hidden" id="teacher-panel">
+      <div id="teacher-menu">
+        <div class="teacher-panel-header">
+          <span class="eyebrow">Herramientas de gestión</span>
+          <h1>Panel de <span>profesor</span></h1>
+          <p>Elige qué quieres administrar:</p>
+        </div>
+        <div class="home-actions teacher-actions">
+          <button type="button" class="action-btn" data-teacher-module="teacher-module-add-word">
+            <span class="teacher-menu-icon" aria-hidden="true">📝</span>
+            <span class="action-label">Agregar palabra</span>
+          </button>
+          <button type="button" class="action-btn" data-teacher-module="teacher-module-ai-words">
+            <span class="teacher-menu-icon" aria-hidden="true">🤖</span>
+            <span class="action-label">Generar palabras por tema</span>
+          </button>
+          <button type="button" class="action-btn" data-teacher-module="teacher-module-word-bank">
+            <span class="teacher-menu-icon" aria-hidden="true">📚</span>
+            <span class="action-label">Consultar palabras</span>
+          </button>
+          <button type="button" class="action-btn" data-teacher-module="teacher-module-create-game">
+            <img class="action-icon-img" src="/static/assets/icons/play-word-game.png" alt="" aria-hidden="true" />
+            <span class="action-label">Crear partida temática</span>
+          </button>
+          <button type="button" class="action-btn" data-teacher-module="teacher-module-assigned-games">
+            <span class="teacher-menu-icon" aria-hidden="true">🗂️</span>
+            <span class="action-label">Partidas creadas</span>
+          </button>
+          <button type="button" class="action-btn" data-teacher-module="teacher-module-daily-word">
+            <img class="action-icon-img" src="/static/assets/icons/daily-word.png" alt="" aria-hidden="true" />
+            <span class="action-label">Palabra del Día</span>
+          </button>
+        </div>
+        <button type="button" id="back-to-home-from-teacher-btn" class="secondary-button">Volver al inicio</button>
+      </div>
 
-          <label for="word-theme">Tema:</label>
-          <input type="text" id="word-theme" name="wordTheme" maxlength="50" placeholder="Ej. Animales" value="General" required />
+      <div class="teacher-modules">
+        <section class="teacher-module hidden" id="teacher-module-add-word">
+          <div class="teacher-widget-heading">
+            <span class="teacher-widget-icon" aria-hidden="true">📝</span>
+            <div><span class="eyebrow">Banco de contenido</span><h3>Agregar palabra</h3></div>
+          </div>
+          <button type="button" class="secondary-button teacher-back-button" data-back-to-teacher-menu>← Panel de profesor</button>
+          <form id="word-form" class="auth-form" novalidate>
+            <label for="word-text">Palabra:
+              <input
+                type="text"
+                id="word-text"
+                name="wordText"
+                pattern="^[a-zA-ZñÑáéíóúÁÉÍÓÚüÜ]+$"
+                title="La palabra solo debe contener letras."
+                required
+              />
+            </label>
+            <label for="word-difficulty">Dificultad:
+              <select id="word-difficulty" name="wordDifficulty" required>
+                <option value="easy">Fácil</option>
+                <option value="medium">Medio</option>
+                <option value="hard">Difícil</option>
+              </select>
+            </label>
+            <label for="word-theme">Tema:
+              <input type="text" id="word-theme" name="wordTheme" maxlength="50" placeholder="Ej. Animales" value="General" required />
+            </label>
+            <label class="inline-check" for="word-assign-daily">
+              <input type="checkbox" id="word-assign-daily" name="wordAssignDaily" />
+              Usar también como Palabra del Día
+            </label>
+            <div class="auth-actions">
+              <button type="submit" id="add-word-btn">Agregar palabra</button>
+            </div>
+          </form>
+          <div class="message" id="teacher-message" aria-live="polite"></div>
+        </section>
 
-          <label class="inline-check" for="word-assign-daily">
-            <input type="checkbox" id="word-assign-daily" name="wordAssignDaily" />
-            Usar también como Palabra del Día
-          </label>
-          
-          <div class="auth-actions">
-            <button type="submit" id="add-word-btn">Agregar palabra</button>
-            <button type="button" id="back-to-home-from-teacher-btn" class="secondary-button">Volver</button>
+        <section class="teacher-module hidden" id="teacher-module-ai-words">
+          <div class="teacher-widget-heading">
+            <span class="teacher-widget-icon" aria-hidden="true">🤖</span>
+            <div><span class="eyebrow">Generador IA</span><h3>Crear palabras por tema</h3></div>
           </div>
-        </form>
-        <div class="message" id="teacher-message" aria-live="polite"></div>
-      </details>
-      <details class="config-card mb-4">
-        <summary class="font-bold cursor-pointer text-lg select-none py-2 px-3 bg-gray-50 rounded-lg mb-2">
-          🤖 Generar palabras por tema (IA)
-        </summary>
-        <form id="ai-word-form" class="auth-form config-card border-0 p-2" novalidate>
-          <div class="section-heading"><div><span class="eyebrow">Generador IA</span><h3>Crear palabras por tema</h3></div></div>
-          <div class="config-grid">
-            <label for="ai-word-theme">Tema
-              <input id="ai-word-theme" maxlength="50" placeholder="Ej. Ciberseguridad" required>
-            </label>
-            <label for="ai-word-count">Cantidad
-              <select id="ai-word-count"><option>5</option><option selected>10</option><option>15</option><option>20</option><option>30</option></select>
-            </label>
-            <label for="ai-word-difficulty">Dificultad
-              <select id="ai-word-difficulty"><option value="easy">Fácil</option><option value="medium">Media</option><option value="hard">Difícil</option></select>
-            </label>
-          </div>
-          <div class="auth-actions">
-            <button type="submit" id="generate-ai-words-btn">Generar y guardar palabras</button>
-          </div>
-          <div class="message" id="ai-word-message" aria-live="polite"></div>
-        </form>
-      </details>
+          <button type="button" class="secondary-button teacher-back-button" data-back-to-teacher-menu>← Panel de profesor</button>
+          <form id="ai-word-form" class="auth-form" novalidate>
+            <div class="config-grid">
+              <label for="ai-word-theme">Tema
+                <input id="ai-word-theme" maxlength="50" placeholder="Ej. Ciberseguridad" required>
+              </label>
+              <label for="ai-word-count">Cantidad
+                <select id="ai-word-count"><option>5</option><option selected>10</option><option>15</option><option>20</option><option>30</option></select>
+              </label>
+              <label for="ai-word-difficulty">Dificultad
+                <select id="ai-word-difficulty"><option value="easy">Fácil</option><option value="medium">Media</option><option value="hard">Difícil</option></select>
+              </label>
+            </div>
+            <div class="auth-actions">
+              <button type="submit" id="generate-ai-words-btn">Generar y guardar palabras</button>
+            </div>
+            <div class="message" id="ai-word-message" aria-live="polite"></div>
+          </form>
+        </section>
 
-      <details class="config-card mb-4">
-        <summary class="font-bold cursor-pointer text-lg select-none py-2 px-3 bg-gray-50 rounded-lg mb-2">
-          📚 Banco de contenido y Partidas
-        </summary>
-        <div class="teacher-workspace p-2">
-          <div class="section-heading"><div><span class="eyebrow">Banco de contenido</span><h3>Temas y partidas</h3></div></div>
+        <section class="teacher-module hidden" id="teacher-module-word-bank">
+          <div class="teacher-widget-heading">
+            <span class="teacher-widget-icon" aria-hidden="true">📚</span>
+            <div><span class="eyebrow">Banco de contenido</span><h3>Consultar palabras</h3></div>
+          </div>
+          <button type="button" class="secondary-button teacher-back-button" data-back-to-teacher-menu>← Panel de profesor</button>
           <div class="filter-grid">
             <label for="word-filter">Filtrar palabras
               <input id="word-filter" type="search" placeholder="Buscar por palabra…" autocomplete="off">
@@ -298,8 +330,15 @@
             </label>
           </div>
           <div id="teacher-word-bank" class="word-bank" aria-live="polite"></div>
+        </section>
 
-          <form id="game-config-form" class="auth-form config-card">
+        <section class="teacher-module hidden" id="teacher-module-create-game">
+          <div class="teacher-widget-heading">
+            <span class="teacher-widget-icon" aria-hidden="true">🎮</span>
+            <div><span class="eyebrow">Asignaciones</span><h3>Crear partida temática</h3></div>
+          </div>
+          <button type="button" class="secondary-button teacher-back-button" data-back-to-teacher-menu>← Panel de profesor</button>
+          <form id="game-config-form" class="auth-form">
             <div class="config-grid">
               <label for="game-theme">Tema de la partida
                 <input id="game-theme" maxlength="50" placeholder="Ej. Sistema solar" required>
@@ -315,10 +354,23 @@
               </label>
             </div>
             <div class="student-picker" aria-describedby="student-help">
-              <label for="student-filter">Asignar a alumnos</label>
+              <label for="student-grade-filter">Filtrar alumnos por grado y grupo</label>
+              <div class="student-group-filters">
+                <select id="student-grade-filter" aria-label="Filtrar por grado">
+                  <option value="">Todos los grados</option>
+                </select>
+                <select id="student-group-filter" aria-label="Filtrar por grupo">
+                  <option value="">Todos los grupos</option>
+                </select>
+              </div>
+              <label for="student-filter">Buscar alumnos</label>
               <input id="student-filter" type="search" placeholder="Buscar por nombre, usuario o correo..." autocomplete="off">
+              <div class="student-selection-actions">
+                <button type="button" id="select-filtered-students" class="secondary-button">Seleccionar alumnos filtrados</button>
+                <button type="button" id="clear-filtered-students" class="secondary-button">Quitar selección visible</button>
+              </div>
               <div id="student-checklist" class="student-checklist" role="group" aria-label="Lista de alumnos"></div>
-              <small id="student-help">Marca uno o varios alumnos. Déjalo sin selección para preparar una partida propia.</small>
+              <small id="student-help">Filtra por grado/grupo y selecciona a todos para asignar una actividad al grupo completo, o marca alumnos individuales.</small>
             </div>
             <div class="auth-actions">
               <button type="submit" id="create-themed-game-btn">Crear y asignar partida</button>
@@ -326,45 +378,50 @@
             </div>
             <div class="message" id="game-config-message" aria-live="polite"></div>
           </form>
+        </section>
 
-          <div class="config-card">
-            <div class="section-heading">
-              <div><span class="eyebrow">Partidas creadas</span><h3>Partidas temáticas</h3></div>
-            </div>
-            <div id="assigned-games-list" class="assignment-list" aria-live="polite"></div>
-            <div class="message" id="assigned-games-message" aria-live="polite"></div>
+        <section class="teacher-module hidden" id="teacher-module-assigned-games">
+          <div class="teacher-widget-heading">
+            <span class="teacher-widget-icon" aria-hidden="true">🗂️</span>
+            <div><span class="eyebrow">Asignaciones</span><h3>Partidas creadas</h3></div>
           </div>
-        </div>
-      </details>
+          <button type="button" class="secondary-button teacher-back-button" data-back-to-teacher-menu>← Panel de profesor</button>
+          <div id="assigned-games-list" class="assignment-list" aria-live="polite"></div>
+          <div class="message" id="assigned-games-message" aria-live="polite"></div>
+        </section>
 
-      <details class="config-card mb-4">
-        <summary class="font-bold cursor-pointer text-lg select-none py-2 px-3 bg-gray-50 rounded-lg mb-2">
-          🌟 Establecer Palabra del Día
-        </summary>
-        <form id="daily-word-form" class="auth-form p-2" novalidate>
-          <label for="daily-word-select">Seleccionar palabra:</label>
-          <select id="daily-word-select" name="dailyWordSelect">
-            <option value="">Cargando palabras...</option>
-          </select>
-          <div class="config-grid">
-            <label for="daily-word-text">O escribir palabra nueva
-              <input id="daily-word-text" maxlength="40" pattern="^[a-zA-ZñÑáéíóúÁÉÍÓÚüÜ]+$" placeholder="Ej. algoritmo" autocomplete="off" />
-            </label>
-            <label for="daily-word-theme">Tema
-              <input id="daily-word-theme" maxlength="50" placeholder="Ej. Programación" value="General" />
-            </label>
-            <label for="daily-word-difficulty">Dificultad
-              <select id="daily-word-difficulty">
-                <option value="easy">Fácil</option>
-                <option value="medium">Media</option>
-                <option value="hard">Difícil</option>
+        <section class="teacher-module hidden" id="teacher-module-daily-word">
+          <div class="teacher-widget-heading">
+            <span class="teacher-widget-icon" aria-hidden="true">🌟</span>
+            <div><span class="eyebrow">Actividad diaria</span><h3>Palabra del Día</h3></div>
+          </div>
+          <button type="button" class="secondary-button teacher-back-button" data-back-to-teacher-menu>← Panel de profesor</button>
+          <form id="daily-word-form" class="auth-form" novalidate>
+            <label for="daily-word-select">Seleccionar palabra:
+              <select id="daily-word-select" name="dailyWordSelect">
+                <option value="">Cargando palabras...</option>
               </select>
             </label>
-          </div>
-          <button type="submit" id="set-daily-word-btn">Establecer como Palabra del Día</button>
-          <div class="message" id="daily-word-message" aria-live="polite"></div>
-        </form>
-      </details>
+            <div class="config-grid">
+              <label for="daily-word-text">O escribir palabra nueva
+                <input id="daily-word-text" maxlength="40" pattern="^[a-zA-ZñÑáéíóúÁÉÍÓÚüÜ]+$" placeholder="Ej. algoritmo" autocomplete="off" />
+              </label>
+              <label for="daily-word-theme">Tema
+                <input id="daily-word-theme" maxlength="50" placeholder="Ej. Programación" value="General" />
+              </label>
+              <label for="daily-word-difficulty">Dificultad
+                <select id="daily-word-difficulty">
+                  <option value="easy">Fácil</option>
+                  <option value="medium">Media</option>
+                  <option value="hard">Difícil</option>
+                </select>
+              </label>
+            </div>
+            <button type="submit" id="set-daily-word-btn">Establecer como Palabra del Día</button>
+            <div class="message" id="daily-word-message" aria-live="polite"></div>
+          </form>
+        </section>
+      </div>
     </section>
 
     <section class="panel hidden" id="speed-challenge-panel">
@@ -455,6 +512,6 @@
   </main>
 
   <script src="/static/components/theme.js"></script>
-  <script type="module" src="/static/app.mjs"></script>
+  <script type="module" src="/static/app.mjs?v=20261016-student-groups"></script>
 </body>
 </html>

@@ -10,7 +10,10 @@ from .models import AssignedGame, Player, Word
 @endpoint(['GET'], auth=True, teacher=True)
 def students(request):
     rows = Player.objects.filter(role='student').order_by('first_name', 'last_name', 'name')
-    return JsonResponse([{key: getattr(row, key) for key in ('id', 'name', 'first_name', 'last_name', 'email')} for row in rows], safe=False)
+    return JsonResponse([{
+        key: getattr(row, key)
+        for key in ('id', 'name', 'first_name', 'last_name', 'email', 'grade', 'group_name')
+    } for row in rows], safe=False)
 
 
 @endpoint(['GET'], auth=True)
@@ -31,7 +34,8 @@ def teacher_assignments(request):
                           'status': row.status, 'current_index': row.current_index,
                           'created_at': row.created_at.isoformat(), 'word_count': len(row.word_ids),
                           'student_username': row.student.name, 'student_first_name': row.student.first_name,
-                          'student_last_name': row.student.last_name} for row in rows], safe=False)
+                          'student_last_name': row.student.last_name, 'student_grade': row.student.grade,
+                          'student_group': row.student.group_name} for row in rows], safe=False)
 
 
 @endpoint(['POST'], auth=True, teacher=True)
@@ -54,11 +58,11 @@ def create_assignment(request):
     theme = str(data.get('theme') or '').strip()[:50] or 'General'
     assignments = [AssignedGame(teacher=request.player, student_id=student_id,
                                 theme=theme, difficulty=difficulty,
-                                word_ids=valid_words[index::len(valid_students)])
-                   for index, student_id in enumerate(valid_students) if valid_words[index::len(valid_students)]]
+                                word_ids=valid_words)
+                   for student_id in valid_students]
     with transaction.atomic():
         AssignedGame.objects.bulk_create(assignments)
-    return JsonResponse({'message': f'Partida repartida aleatoriamente entre {len(assignments)} alumno(s).',
+    return JsonResponse({'message': f'Partida asignada a {len(assignments)} alumno(s) con la misma lista de palabras.',
                          'assignedStudents': len(assignments), 'totalWords': len(valid_words)}, status=201)
 
 

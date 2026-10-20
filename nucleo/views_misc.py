@@ -13,6 +13,10 @@ def register_page(request):
     return FileResponse((settings.BASE_DIR / 'interfaz/register.html').open('rb'), content_type='text/html')
 
 
+def password_recovery_page(request):
+    return FileResponse((settings.BASE_DIR / 'interfaz/password-recovery.html').open('rb'), content_type='text/html')
+
+
 @endpoint(['GET'])
 def health(request):
     try:

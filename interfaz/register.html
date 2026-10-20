@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <title>Registrarse - Ahorcado</title>
-  <link rel="stylesheet" href="/static/styles.css" />
+  <link rel="stylesheet" href="/static/styles.css?v=20261016-student-groups" />
 </head>
 <body>
   <div class="particle-field" id="particle-field" aria-hidden="true"></div>
@@ -18,7 +18,7 @@
   <main class="app">
     <section class="panel" id="register-panel">
       <h1>Crear cuenta</h1>
-      <p>Completa el formulario para registrarte como alumno o profesor.</p>
+      <p>Completa el formulario para crear tu cuenta.</p>
       
       <form id="register-form" class="auth-form" novalidate>
         
@@ -61,9 +61,17 @@
           type="email" 
           id="register-email" 
           name="email"
+          maxlength="100"
+          inputmode="email"
           autocomplete="email"
+          autocapitalize="none"
+          spellcheck="false"
+          aria-describedby="register-email-hint register-email-error"
+          title="Ingresa un correo válido, por ejemplo nombre@dominio.com."
           required 
         />
+        <small class="email-hint" id="register-email-hint">Usa un correo válido de hasta 100 caracteres.</small>
+        <p class="field-error" id="register-email-error" aria-live="polite"></p>
 
         <label for="register-role">Rol:</label>
         <select id="register-role" name="role" required>
@@ -72,13 +80,38 @@
           <option value="teacher">Profesor</option>
         </select>
 
+        <div id="student-registration-fields" class="student-registration-fields hidden">
+          <label for="register-grade">Grado
+            <input
+              type="text"
+              id="register-grade"
+              name="grade"
+              maxlength="30"
+              placeholder="Ej. 1° de secundaria"
+              autocomplete="off"
+            />
+          </label>
+          <label for="register-group">Grupo
+            <input
+              type="text"
+              id="register-group"
+              name="group_name"
+              maxlength="20"
+              placeholder="Ej. A"
+              autocomplete="off"
+            />
+          </label>
+          <small class="email-hint">Estos datos permiten que tu profesor organice actividades para tu grupo.</small>
+        </div>
+
         <label for="register-password">Contraseña:</label>
         <input 
           type="password" 
           id="register-password" 
           name="password"
-          minlength="6"
-          title="La contraseña debe tener al menos 6 caracteres."
+          minlength="12"
+          maxlength="72"
+          title="La contraseña debe tener entre 12 y 72 caracteres, con mayúsculas, minúsculas y números."
           autocomplete="new-password"
           required 
         />
@@ -94,6 +127,6 @@
   </main>
 
   <script src="/static/components/theme.js"></script>
-  <script type="module" src="/static/app.mjs"></script>
+  <script type="module" src="/static/app.mjs?v=20261016-student-groups"></script>
 </body>
 </html>

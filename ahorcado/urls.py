@@ -13,6 +13,8 @@ urlpatterns = [
     path('api/health', views_misc.health),
     path('api/auth/register', views_auth.register),
     path('api/auth/login', views_auth.login),
+    path('api/auth/password-reset', views_auth.request_password_reset),
+    path('api/auth/password-reset/confirm', views_auth.reset_password),
     path('api/auth/me', views_auth.account),
     path('api/leaderboard', views_misc.leaderboard),
     path('api/game', views_games.create_game),
@@ -31,5 +33,6 @@ urlpatterns = [
     path('api/assignments/teacher', views_assignments.teacher_assignments),
     path('api/assignments/<int:assignment_id>', views_assignments.delete_assignment),
     path('register.html', views_misc.register_page),
+    path('password-recovery.html', views_misc.password_recovery_page),
     path('', views_misc.index),
 ]
