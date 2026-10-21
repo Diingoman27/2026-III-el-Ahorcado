@@ -61,17 +61,21 @@ ASGI_APPLICATION = 'ahorcado.asgi.application'
 LOGIN_URL = '/register.html'
 SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
 
-DEFAULT_DB_URL = 'postgresql://postgres.ciassthcelqvmjdajnyt:wWtgrcx8nJ1bWuxz@aws-0-us-east-2.pooler.supabase.com:6543/postgres?sslmode=require'
+SUPABASE_PROJECT_REF = 'vhsqyvppeljmbpizzyjp'
+SUPABASE_URL = f'https://{SUPABASE_PROJECT_REF}.supabase.co'
+SUPABASE_DB_PASSWORD = os.getenv('SUPABASE_DB_PASSWORD', '3KWG9xby0A4FLcBf')
+
+DEFAULT_DB_URL = (
+    f'postgresql://postgres.{SUPABASE_PROJECT_REF}:{SUPABASE_DB_PASSWORD}'
+    f'@aws-0-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require'
+)
 
 url = (
     os.getenv('DATABASE_URL') or
-    os.getenv('POSTGRES_PRISMA_URL') or
-    os.getenv('POSTGRES_URL') or
-    os.getenv('PG_CONNECTION_STRING') or
     DEFAULT_DB_URL
 ).strip('"\' \n\r')
 
-if not url or 'izloztttkwcdfrxkqocb' in url:
+if not url or 'izloztttkwcdfrxkqocb' in url or 'ciassthcelqvmjdajnyt' in url:
     url = DEFAULT_DB_URL
 
 parsed = urlparse(url)
