@@ -433,10 +433,8 @@ class SecurityHardeningTests(TestCase):
             grade='',
             group_name='',
         )
-        animal_words = [
+        for i in range(5):
             Word.objects.create(word=f'animal{i}', difficulty='easy', theme='Animales')
-            for i in range(5)
-        ]
 
         response = self.client.post(
             '/api/words/prepare-game',
