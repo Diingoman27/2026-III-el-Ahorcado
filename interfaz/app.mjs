@@ -2,6 +2,12 @@ import { state, setState } from './components/state.mjs';
 import { setMessage, showPanel } from './components/ui.mjs';
 import { deleteMyAccount, loadLeaderboard as fetchLeaderboard, registerUser, loginUser } from './components/api.mjs';
 import { saveSession, loadSession, clearSession as clearStoredSession } from './components/session.mjs';
+import {
+  getGoogleRegistrationDraft,
+  getGoogleRegistrationProfile,
+  registerWithGoogle,
+  startGoogleAuth,
+} from './components/google-auth.mjs?v=20261022-google-signup-recovery';
 import { initTraditionalGame } from './components/game.mjs';
 import { initDailyChallenge } from './components/challenge.mjs';
 import { initTeacherPanel } from './components/teacher.mjs';
@@ -13,20 +19,33 @@ const elements = {
   authName: document.getElementById('auth-name'),
   authPassword: document.getElementById('auth-password'),
   showRegisterBtn: document.getElementById('show-register-btn'),
+  googleLoginBtn: document.getElementById('google-login-btn'),
   authMessage: document.getElementById('auth-message'),
   rankingList: document.getElementById('ranking-list'),
   registerForm: document.getElementById('register-form'),
+  registerChoice: document.getElementById('register-choice'),
+  registerEmailStartBtn: document.getElementById('register-email-start'),
+  registerTitle: document.getElementById('register-title'),
+  registerDescription: document.getElementById('register-description'),
   registerUsername: document.getElementById('register-username'),
   registerFirstName: document.getElementById('register-first-name'),
   registerLastName: document.getElementById('register-last-name'),
   registerEmail: document.getElementById('register-email'),
+  registerEmailField: document.getElementById('register-email-field'),
   registerEmailError: document.getElementById('register-email-error'),
   registerRole: document.getElementById('register-role'),
   studentRegistrationFields: document.getElementById('student-registration-fields'),
   registerGrade: document.getElementById('register-grade'),
   registerGroup: document.getElementById('register-group'),
   registerPassword: document.getElementById('register-password'),
+  registerPasswordField: document.getElementById('register-password-field'),
+  registerPasswordConfirmation: document.getElementById('register-password-confirmation'),
+  googlePasswordConfirmation: document.getElementById('google-password-confirmation'),
+  googlePasswordRequirements: document.getElementById('google-password-requirements'),
+  registerFormBtn: document.getElementById('register-form-btn'),
   registerMessage: document.getElementById('register-message'),
+  googleRegisterBtn: document.getElementById('google-register-btn'),
+  googleRegisterRetryBtn: document.getElementById('google-register-retry-btn'),
   backToLoginBtn: document.getElementById('back-to-login'),
   loginLayout: document.getElementById('login-layout'),
   introPanel: document.getElementById('intro-panel'),
@@ -129,26 +148,72 @@ const elements = {
   deleteAccountMessage: document.getElementById('delete-account-message'),
 };
 
-async function loadLeaderboard() {
-  if (!elements.rankingList) return;
+let leaderboardRequestId = 0;
+
+export async function loadLeaderboard() {
+  const rankingList = document.getElementById('ranking-list');
+  if (!rankingList) return;
+
+  const requestId = ++leaderboardRequestId;
+  const search = document.getElementById('searchInput')?.value.trim() ?? '';
+  const normalizedSearch = search.toLocaleLowerCase();
+  const limit = document.getElementById('limitFilter')?.value ?? '10';
+
   try {
-    const { response, data } = await fetchLeaderboard();
-    if (!response.ok || !Array.isArray(data)) throw new Error(data.error || 'Ranking no disponible');
-    elements.rankingList.innerHTML = '';
-    if (data.length === 0) {
-      elements.rankingList.innerHTML = '<li>Aún no hay jugadores en el ranking.</li>';
+    const { response, data } = await fetchLeaderboard(search, limit);
+    if (requestId !== leaderboardRequestId) return;
+    if (!response.ok || !Array.isArray(data)) {
+      throw new Error(data.error || 'Ranking no disponible');
+    }
+
+    const matchingPlayers = data.filter((player) =>
+      player.name.toLocaleLowerCase().includes(normalizedSearch)
+    );
+
+    rankingList.innerHTML = '';
+
+    if (matchingPlayers.length === 0) {
+      rankingList.innerHTML = '<li>Aún no hay jugadores en el ranking.</li>';
       return;
     }
-    data.forEach((player) => {
-      const li = document.createElement('li');
-      li.textContent = `${player.name} — ${player.score} pts`;
-      elements.rankingList.appendChild(li);
+
+    matchingPlayers.forEach((player) => {
+      const listItem = document.createElement('li');
+      listItem.textContent = `${player.name} — ${player.score} pts`;
+      rankingList.appendChild(listItem);
     });
   } catch (error) {
-    elements.rankingList.innerHTML = '<li>El ranking no está disponible por el momento.</li>';
+    if (requestId !== leaderboardRequestId) return;
+    console.error('Error al cargar el ranking:', error);
+    rankingList.innerHTML = '<li>El ranking no está disponible por el momento.</li>';
   }
 }
 
+function initializeLeaderboardFilters() {
+  const searchInput = document.getElementById('searchInput');
+  const limitFilter = document.getElementById('limitFilter');
+
+  if (searchInput) {
+    let searchTimeout;
+    searchInput.addEventListener('input', () => {
+      const search = searchInput.value.trim().toLocaleLowerCase();
+      document.querySelectorAll('#ranking-list li').forEach((item) => {
+        item.style.display = item.textContent.toLocaleLowerCase().includes(search) ? '' : 'none';
+      });
+      window.clearTimeout(searchTimeout);
+      searchTimeout = window.setTimeout(loadLeaderboard, 250);
+    });
+  }
+  if (limitFilter) {
+    limitFilter.addEventListener('change', loadLeaderboard);
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeLeaderboardFilters, { once: true });
+} else {
+  initializeLeaderboardFilters();
+}
 async function setUserSession(data) {
   setState({ token: data.token, user: data.user });
   saveSession(data.token, data.user);
@@ -234,7 +299,58 @@ if (elements.showRegisterBtn) {
   });
 }
 
+if (elements.googleLoginBtn) {
+  elements.googleLoginBtn.addEventListener('click', async () => {
+    try {
+      await startGoogleAuth('login');
+    } catch (error) {
+      setMessage(elements.authMessage, error.message || 'No se pudo iniciar sesión con Google.');
+    }
+  });
+}
+
 if (elements.registerForm) {
+  elements.registerEmailStartBtn?.addEventListener('click', () => {
+    elements.registerChoice.classList.add('hidden');
+    elements.registerForm.classList.remove('hidden');
+    elements.registerDescription.textContent = 'Completa el formulario para crear tu cuenta.';
+  });
+
+  let googleRegistrationProfile = null;
+  try {
+    if (new URLSearchParams(window.location.search).get('google') === 'complete') {
+      googleRegistrationProfile = getGoogleRegistrationProfile();
+      if (googleRegistrationProfile) {
+        elements.registerChoice.classList.add('hidden');
+        elements.registerForm.classList.remove('hidden');
+        const registrationDraft = getGoogleRegistrationDraft();
+        const email = googleRegistrationProfile.email || '';
+        const suggestedUsername = email.split('@', 1)[0].replace(/[^a-zA-Z0-9_]/g, '').slice(0, 30);
+        elements.registerTitle.textContent = 'Completa tu registro';
+        elements.registerDescription.textContent = `Cuenta de Google verificada: ${email}. Completa tus datos y elige una contraseña para iniciar sesión sin Google.`;
+        elements.registerFirstName.value = registrationDraft?.first_name || googleRegistrationProfile.first_name || '';
+        elements.registerLastName.value = registrationDraft?.last_name || googleRegistrationProfile.last_name || '';
+        elements.registerUsername.value = registrationDraft?.name
+          || (suggestedUsername.length >= 3 ? suggestedUsername : 'jugador_google');
+        elements.registerEmail.value = email;
+        elements.registerRole.value = registrationDraft?.role || '';
+        if (elements.registerGrade) elements.registerGrade.value = registrationDraft?.grade || '';
+        if (elements.registerGroup) elements.registerGroup.value = registrationDraft?.group_name || '';
+        elements.registerEmailField.classList.add('hidden');
+        elements.registerPasswordField.classList.remove('hidden');
+        elements.registerEmail.required = false;
+        elements.registerPassword.labels[0].textContent = 'Elige una contraseña:';
+        elements.registerPasswordConfirmation.required = true;
+        elements.googlePasswordConfirmation.classList.remove('hidden');
+        elements.googlePasswordRequirements.classList.remove('hidden');
+        elements.registerFormBtn.textContent = 'Completar registro y entrar';
+        elements.googleRegisterRetryBtn.textContent = 'Volver a autorizar con Google';
+      }
+    }
+  } catch (error) {
+    setMessage(elements.registerMessage, error.message);
+  }
+
   const updateStudentRegistrationFields = () => {
     const isStudent = elements.registerRole.value === 'student';
     elements.studentRegistrationFields?.classList.toggle('hidden', !isStudent);
@@ -244,6 +360,9 @@ if (elements.registerForm) {
 
   elements.registerRole?.addEventListener('change', updateStudentRegistrationFields);
   updateStudentRegistrationFields();
+  elements.registerPasswordConfirmation?.addEventListener('input', () => {
+    elements.registerPasswordConfirmation.setCustomValidity('');
+  });
 
   const validateRegistrationEmail = () => {
     const email = elements.registerEmail;
@@ -275,14 +394,33 @@ if (elements.registerForm) {
       name: elements.registerUsername.value.trim(),
       first_name: elements.registerFirstName.value.trim(),
       last_name: elements.registerLastName.value.trim(),
-      email: elements.registerEmail.value.trim().toLowerCase(),
       role: elements.registerRole.value,
       grade: elements.registerGrade?.value.trim() || '',
       group_name: elements.registerGroup?.value.trim() || '',
-      password: elements.registerPassword.value,
     };
 
-    const { response, data } = await registerUser(payload);
+    let response;
+    let data;
+    if (googleRegistrationProfile) {
+      if (elements.registerPassword.value !== elements.registerPasswordConfirmation.value) {
+        elements.registerPasswordConfirmation.setCustomValidity('Las contraseñas no coinciden.');
+        elements.registerPasswordConfirmation.reportValidity();
+        return;
+      }
+      elements.registerPasswordConfirmation.setCustomValidity('');
+      payload.password = elements.registerPassword.value;
+      try {
+        data = await registerWithGoogle(payload);
+        response = { ok: true };
+      } catch (error) {
+        setMessage(elements.registerMessage, error.message || 'No se pudo completar el registro con Google.');
+        return;
+      }
+    } else {
+      payload.email = elements.registerEmail.value.trim().toLowerCase();
+      payload.password = elements.registerPassword.value;
+      ({ response, data } = await registerUser(payload));
+    }
     if (response.ok && data.token) {
       if (data.user?.role !== payload.role) {
         setMessage(elements.registerMessage, 'El rol guardado no coincide con el rol seleccionado. Inicia sesión de nuevo o contacta al administrador.');
@@ -294,6 +432,26 @@ if (elements.registerForm) {
       setMessage(elements.registerMessage, data.error || 'Error registrando usuario');
     }
   });
+
+  const startGoogleRegistration = async () => {
+    try {
+      const registrationDraft = googleRegistrationProfile
+        ? {
+            name: elements.registerUsername.value.trim(),
+            first_name: elements.registerFirstName.value.trim(),
+            last_name: elements.registerLastName.value.trim(),
+            role: elements.registerRole.value,
+            grade: elements.registerGrade?.value.trim() || '',
+            group_name: elements.registerGroup?.value.trim() || '',
+          }
+        : null;
+      await startGoogleAuth('register', registrationDraft);
+    } catch (error) {
+      setMessage(elements.registerMessage, error.message || 'No se pudo iniciar el registro con Google.');
+    }
+  };
+  elements.googleRegisterBtn?.addEventListener('click', startGoogleRegistration);
+  elements.googleRegisterRetryBtn?.addEventListener('click', startGoogleRegistration);
 }
 
 if (elements.backToLoginBtn) {

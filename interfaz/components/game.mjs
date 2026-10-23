@@ -16,11 +16,31 @@ export function initTraditionalGame({ elements, onGameReady }) {
   const pendingLetters = new Set();
   let explainedGameId = null;
 
-  function renderHangman(wrongAttempts = 0) {
+  function renderHangman(wrongAttempts = 0, shouldAnimate = false) {
     hangmanParts?.forEach((part) => {
-      part.classList.toggle('visible', Number(part.dataset.step) <= wrongAttempts);
+      const shouldBeVisible = Number(part.dataset.step) <= wrongAttempts;
+      const wasVisible = part.classList.contains('visible');
+
+      part.classList.toggle('visible', shouldBeVisible);
+      if (shouldBeVisible && !wasVisible) {
+        part.classList.remove('part-appearing');
+        void part.getBoundingClientRect();
+        part.classList.add('part-appearing');
+      }
     });
-    if (attemptMeterFill) attemptMeterFill.style.width = `${Math.min(100, (wrongAttempts / 6) * 100)}%`;
+
+    const stage = hangmanParts?.[0]?.closest('.hangman-stage');
+    if (shouldAnimate && stage) {
+      stage.classList.remove('is-animating');
+      void stage.offsetWidth;
+      stage.classList.add('is-animating');
+    } else if (wrongAttempts === 0) {
+      stage?.classList.remove('is-animating');
+    }
+
+    if (attemptMeterFill) {
+      attemptMeterFill.style.width = `${Math.min(100, (wrongAttempts / 6) * 100)}%`;
+    }
   }
 
   function renderKeypad(guessed = [], wrong = [], status = 'playing') {
@@ -129,7 +149,7 @@ export function initTraditionalGame({ elements, onGameReady }) {
     hintArea && (hintArea.textContent = data.hint
       ? `Pista: se reveló la letra “${data.hint.toUpperCase()}”. ${data.learningHint || ''}`.trim()
       : 'Recibes una pista cada dos fallos.');
-    renderHangman(data.wrongAttempts);
+    renderHangman(data.wrongAttempts, Boolean(newWrongGuess));
     renderKeypad(data.guessedLetters, data.wrongLetters, data.status);
     startGameBtn?.classList.add('hidden');
     newGameBtn?.classList.toggle('hidden', data.status === 'playing');

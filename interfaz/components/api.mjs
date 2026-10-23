@@ -61,8 +61,9 @@ export async function deleteMyAccount(password) {
   });
 }
 
-export async function loadLeaderboard() {
-  return apiFetch('/api/leaderboard');
+export async function loadLeaderboard(search = '', limit = '10') {
+  const params = new URLSearchParams({ q: search, limit });
+  return apiFetch(`/api/leaderboard?${params.toString()}`);
 }
 
 export async function createGame(difficulty, wordId = null, assignmentId = null) {

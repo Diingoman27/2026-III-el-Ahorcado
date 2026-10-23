@@ -110,7 +110,7 @@ def prepare_game(request):
     elif source == 'random':
         rows = Word.objects.filter(difficulty=difficulty)
         if theme:
-            rows = rows.filter(theme=theme)
+            rows = rows.filter(theme__iexact=theme)
         results = [word_data(row) for row in rows.order_by('?')[:count]]
     elif source == 'ai':
         theme = theme or 'General'
