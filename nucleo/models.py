@@ -10,6 +10,8 @@ class Player(models.Model):
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     email = models.EmailField(max_length=100, unique=True)
+    is_active = models.BooleanField(default=True)
+    supabase_user_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
     password = models.CharField(max_length=200, default='')
     role = models.CharField(max_length=10, choices=[('student', 'Alumno'), ('teacher', 'Profesor')], default='student')
     grade = models.CharField(max_length=30, blank=True, default='')

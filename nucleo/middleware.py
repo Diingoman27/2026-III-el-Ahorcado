@@ -12,7 +12,7 @@ class SecurityHeadersMiddleware(MiddlewareMixin):
         response["Content-Security-Policy"] = (
             "default-src 'self'; "
             "img-src 'self' data:; "
-            "script-src 'self' 'unsafe-inline'; "
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
             "style-src 'self' 'unsafe-inline'; "
             "font-src 'self' data:; "
             "connect-src 'self' http: https:; "

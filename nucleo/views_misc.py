@@ -13,6 +13,10 @@ def register_page(request):
     return FileResponse((settings.BASE_DIR / 'interfaz/register.html').open('rb'), content_type='text/html')
 
 
+def google_auth_callback_page(request):
+    return FileResponse((settings.BASE_DIR / 'interfaz/auth-callback.html').open('rb'), content_type='text/html')
+
+
 def password_recovery_page(request):
     return FileResponse((settings.BASE_DIR / 'interfaz/password-recovery.html').open('rb'), content_type='text/html')
 
@@ -28,5 +32,16 @@ def health(request):
 
 @endpoint(['GET'])
 def leaderboard(request):
-    rows = Player.objects.order_by('-score', 'created_at').values('name', 'score')[:10]
+    search = request.GET.get('q', '').strip()
+    limit = request.GET.get('limit', '10')
+
+    players = Player.objects.order_by('-score', 'created_at')
+    if search:
+        players = players.filter(name__icontains=search)
+
+    if limit != 'all':
+        limits = {'10': 10, '50': 50, '100': 100}
+        players = players[:limits.get(limit, 10)]
+
+    rows = players.values('name', 'score')
     return JsonResponse(list(rows), safe=False)

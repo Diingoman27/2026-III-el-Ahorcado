@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <title>Autenticando - Ahorcado</title>
+  <link rel="stylesheet" href="/static/styles.css?v=20261022-google-signup-recovery" />
+</head>
+<body>
+  <div class="particle-field" aria-hidden="true"></div>
+  <main class="app">
+    <section class="panel auth-callback-panel">
+      <h1>Conectando con Google</h1>
+      <p id="google-auth-status" role="status" aria-live="polite">Estamos verificando tu cuenta...</p>
+      <a id="google-auth-back" class="secondary-button hidden" href="/register.html">Volver al registro</a>
+    </section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script type="module" src="/static/components/google-auth-callback.mjs?v=20261022-google-signup-recovery"></script>
+</body>
+</html>

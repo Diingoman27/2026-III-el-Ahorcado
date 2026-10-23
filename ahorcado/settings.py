@@ -3,11 +3,15 @@ import mimetypes
 
 from pathlib import Path
 from urllib.parse import urlparse, unquote
-from dotenv import load_dotenv
+from dotenv import dotenv_values, load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 if not os.getenv('VERCEL'):
-    load_dotenv(BASE_DIR / '.env')
+    dotenv_path = BASE_DIR / '.env'
+    load_dotenv(dotenv_path)
+    LOCAL_DOTENV = dotenv_values(dotenv_path)
+else:
+    LOCAL_DOTENV = {}
 mimetypes.add_type("text/javascript", ".mjs")
 
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', os.getenv('JWT_SECRET', ''))
@@ -62,7 +66,11 @@ LOGIN_URL = '/register.html'
 SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
 
 SUPABASE_PROJECT_REF = 'vhsqyvppeljmbpizzyjp'
-SUPABASE_URL = f'https://{SUPABASE_PROJECT_REF}.supabase.co'
+SUPABASE_URL = (
+    os.getenv('SUPABASE_URL') or LOCAL_DOTENV.get('SUPABASE_URL')
+    or f'https://{SUPABASE_PROJECT_REF}.supabase.co'
+).strip().rstrip('/')
+SUPABASE_KEY = (os.getenv('SUPABASE_KEY') or LOCAL_DOTENV.get('SUPABASE_KEY') or '').strip()
 SUPABASE_DB_PASSWORD = os.getenv('SUPABASE_DB_PASSWORD', '3KWG9xby0A4FLcBf')
 
 DEFAULT_DB_URL = (
@@ -102,7 +110,12 @@ STORAGES = {'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedManifestSta
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 USE_TZ = True
 TIME_ZONE = 'America/Mexico_City'
-EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+EMAIL_BACKEND = os.getenv(
+    'EMAIL_BACKEND',
+    'django.core.mail.backends.console.EmailBackend'
+    if DEBUG and not os.getenv('EMAIL_HOST')
+    else 'django.core.mail.backends.smtp.EmailBackend',
+)
 EMAIL_HOST = os.getenv('EMAIL_HOST', '')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')

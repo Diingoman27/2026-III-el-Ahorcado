@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <title>Ahorcado UTVAM</title>
-  <link rel="stylesheet" href="/static/styles.css?v=20261016-student-groups" />
+  <link rel="stylesheet" href="/static/styles.css?v=20261021-google-auth" />
 </head>
 <body>
   <div class="particle-field" id="particle-field" aria-hidden="true"></div>
@@ -28,11 +28,13 @@
     </div>
   </header>
   <main class="app">
-    
-    <div class="login-layout" id="login-layout">
-      <section class="panel" id="intro-panel">
-        <div class="eyebrow">Aprende · compite · supera tu récord</div>
-        <h1>Descubre la palabra.<br><span>Antes del último intento.</span></h1>
+
+      <div class="login-layout" id="login-layout">
+        <section class="panel" id="intro-panel">
+        <span class="slogan-animado">
+            APRENDE · COMPITE · SUPERA TU RÉCORD
+        </span>
+        <h1>Descubre la palabra.<br><span class="slogan-animado">Antes del último intento.</span></h1>
         <p class="lede">Una experiencia de vocabulario para estudiantes y profesores de UTVAM.</p>
 
         <div id="login-view">
@@ -61,6 +63,7 @@
               <button type="submit" id="login-btn">Iniciar sesión</button>
               <button type="button" id="show-register-btn" class="secondary-button">Registrarse</button>
             </div>
+            <button type="button" id="google-login-btn" class="google-auth-button">Continuar con Google</button>
             <a class="password-recovery-link" href="/password-recovery.html">¿Olvidaste tu contraseña?</a>
           </form>
         </div>
@@ -68,16 +71,32 @@
         <div class="message" id="auth-message" aria-live="polite"></div>
 
       </section>
+        <div class="leaderboard-panel">
+  <div class="leaderboard-header">
+    <span class="subtitulo-comunidad">COMUNIDAD</span>
+    <h2 class="titulo-ranking slogan-animado">Ranking General</h2>
+    <div class="live-badge-container">
+      <span class="live-badge">
+        <span class="pulse-dot"></span> En vivo
+      </span>
+    </div>
+  </div>
 
-      <section class="panel leaderboard-panel" aria-labelledby="ranking-title">
-        <div class="section-heading">
-          <div><span class="eyebrow">Comunidad</span><h2 id="ranking-title">Ranking general</h2></div>
-          <span class="live-dot">En vivo</span>
-        </div>
-        <div class="leaderboard" id="leaderboard">
-          <ol id="ranking-list"></ol>
-        </div>
-      </section>
+  <div class="ranking-filters" style="margin: 15px 0;">
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Buscar usuario..." aria-label="Buscar usuario">
+    </div>
+    <select id="limitFilter" aria-label="Cantidad de jugadores">
+      <option value="10">Top 10</option>
+      <option value="50">Top 50</option>
+      <option value="100">Top 100</option>
+      <option value="all">Ver todos</option>
+    </select>
+  </div>
+
+  <ol id="ranking-list">
+  </ol>
+</div>
     </div>
 
     <section class="panel hidden" id="home-panel">
@@ -512,6 +531,7 @@
   </main>
 
   <script src="/static/components/theme.js"></script>
-  <script type="module" src="/static/app.mjs?v=20261016-student-groups"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script type="module" src="/static/app.mjs?v=20261022-google-password-settings"></script>
 </body>
 </html>
