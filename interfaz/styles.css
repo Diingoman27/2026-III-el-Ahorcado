@@ -631,6 +631,8 @@ button{border:0;border-radius:16px;padding:14px 19px;color:#fff;font-weight:720;
 @media(max-width:680px){.topbar{top:8px;margin-top:8px}.app{margin-top:22px;width:calc(100% - 20px)}.panel{border-radius:25px;padding:24px}.home-actions{grid-template-columns:1fr}.action-btn{min-height:105px;flex-direction:row;align-items:center}.action-icon-img{width:58px;height:58px;margin:0 12px 0 0}.game-actions{width:100%}.game-actions>*{flex:1}h1{font-size:2.7rem}.brand span:last-child{font-size:.9rem}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
 .auth-actions a.secondary-button{display:inline-flex;align-items:center;justify-content:center;padding:14px 19px;border-radius:16px;text-decoration:none;font-weight:720}
+#register-choice > #back-to-login{display:flex;align-items:center;justify-content:center;width:100%;min-height:50px;padding:14px 19px;border-radius:16px;text-decoration:none;font-weight:720;transition:transform .2s,filter .2s,background .2s}
+#register-choice > #back-to-login:hover{transform:translateY(-2px);filter:brightness(1.06)}
 
 /* Interactive game and teacher tools */
 .hangman-stage{display:grid;place-items:center;gap:12px;max-width:360px;margin:0 auto 22px;padding:18px;border:1px solid var(--line);border-radius:24px;background:var(--field)}
@@ -1025,6 +1027,33 @@ button{border:0;border-radius:16px;padding:14px 19px;color:#fff;font-weight:720;
 .topbar-actions .settings-top-btn {
   flex: 0 0 auto;
   height: 40px;
+}
+
+.management-shortcut {
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--text);
+  background: var(--field);
+  text-decoration: none;
+  font-size: 1rem;
+  line-height: 1;
+  transition: border-color .2s, background .2s, transform .2s;
+}
+
+.management-shortcut:hover {
+  border-color: var(--primary);
+  background: var(--glass-strong);
+  transform: translateY(-1px);
+}
+
+.ranking-filters {
+  margin: 15px 0;
 }
 
 .screen-credits {
