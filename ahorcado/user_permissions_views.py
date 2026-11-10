@@ -158,6 +158,8 @@ class UserPermissionEditView(UserPermissionAccessMixin, TemplateView):
                 cells.append(perm and {
                     'perm': perm,
                     'action': action,
+                    'short': action_label,
+                    'help': ACTION_HELP[action],
                     'label': f'{action_label} {module_label.lower()}',
                     'checked': perm.pk in direct_ids,
                     'inherited_from': inherited.get(perm.pk),
@@ -169,6 +171,8 @@ class UserPermissionEditView(UserPermissionAccessMixin, TemplateView):
                 'label': module_label, 'model': content_type.model, 'cells': cells,
                 'description': MODULE_DESCRIPTIONS.get(content_type.model, ''),
                 'has_allowed': any(cell and cell['allowed'] for cell in cells),
+                'full_allowed': all(cell and cell['allowed'] for cell in cells),
+                'inherited_any': any(cell and cell['inherited_from'] for cell in cells),
             })
         for section in sections.values():
             section['modules'].sort(key=lambda module: (
