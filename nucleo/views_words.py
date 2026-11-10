@@ -82,6 +82,12 @@ def words(request):
                          'word': word_data(instance)}, status=201)
 
 
+@endpoint(['GET'])
+def visitor_words(request):
+    rows = Word.objects.order_by('theme', 'word')
+    return JsonResponse([word_data(word) for word in rows], safe=False)
+
+
 @endpoint(['POST'], auth=True, teacher=True)
 def generate(request):
     data = body(request)

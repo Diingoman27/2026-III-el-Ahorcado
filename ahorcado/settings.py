@@ -2,7 +2,7 @@ import os
 import mimetypes
 
 from pathlib import Path
-from urllib.parse import urlparse, unquote
+from urllib.parse import urlparse, unquote, quote
 from dotenv import dotenv_values, load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -79,19 +79,26 @@ SUPABASE_URL = (
     or f'https://{SUPABASE_PROJECT_REF}.supabase.co'
 ).strip().rstrip('/')
 SUPABASE_KEY = (os.getenv('SUPABASE_KEY') or LOCAL_DOTENV.get('SUPABASE_KEY') or '').strip()
-SUPABASE_DB_PASSWORD = os.getenv('SUPABASE_DB_PASSWORD', '3KWG9xby0A4FLcBf')
+SUPABASE_DB_PASSWORD = (
+    os.getenv('SUPABASE_DB_PASSWORD') or LOCAL_DOTENV.get('SUPABASE_DB_PASSWORD') or ''
+)
 
 DEFAULT_DB_URL = (
-    f'postgresql://postgres.{SUPABASE_PROJECT_REF}:{SUPABASE_DB_PASSWORD}'
+    f'postgresql://postgres.{SUPABASE_PROJECT_REF}:{quote(SUPABASE_DB_PASSWORD, safe="")}'
     f'@aws-0-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require'
 )
 
 url = (
-    os.getenv('DATABASE_URL') or
-    DEFAULT_DB_URL
+    os.getenv('DATABASE_URL') or LOCAL_DOTENV.get('DATABASE_URL') or
+    (DEFAULT_DB_URL if SUPABASE_DB_PASSWORD else '')
 ).strip('"\' \n\r')
 
+if url.startswith('postgresql:') and '://' not in url:
+    url = 'postgresql://' + url[len('postgresql:'):]
+
 if not url or 'izloztttkwcdfrxkqocb' in url or 'ciassthcelqvmjdajnyt' in url:
+    if not SUPABASE_DB_PASSWORD:
+        raise RuntimeError('Configura DATABASE_URL o SUPABASE_DB_PASSWORD en el entorno local.')
     url = DEFAULT_DB_URL
 
 parsed = urlparse(url)
