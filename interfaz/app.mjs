@@ -299,6 +299,10 @@ if (elements.showRegisterBtn) {
   });
 }
 
+document.getElementById('visitor-login-btn')?.addEventListener('click', () => {
+  window.location.href = '/visita/';
+});
+
 if (elements.googleLoginBtn) {
   elements.googleLoginBtn.addEventListener('click', async () => {
     try {

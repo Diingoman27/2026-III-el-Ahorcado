@@ -9,10 +9,94 @@ from unittest.mock import patch
 from django.core.cache import cache
 from django.core import mail
 from django.db import IntegrityError
-from django.test import TestCase, override_settings
+from django.test import SimpleTestCase, TestCase, override_settings
 from django.utils import timezone
 
+from ahorcado.management_views import build_resource_patterns, resource_url_name
 from .models import AssignedGame, PasswordResetToken, Player, Word
+
+
+class ManagementSafetyTests(SimpleTestCase):
+    def test_password_reset_tokens_are_read_only_in_management(self):
+        route_names = {
+            name for _, _, name in build_resource_patterns()
+            if name.startswith('manage_password_reset_tokens_')
+        }
+
+        self.assertEqual(
+            route_names,
+            {
+                resource_url_name('password-reset-tokens', 'list'),
+                resource_url_name('password-reset-tokens', 'detail'),
+            },
+        )
+
+    def test_password_reset_token_string_does_not_expose_hash(self):
+        player = Player(name='test-player')
+        token = PasswordResetToken(
+            player=player,
+            token_hash='sensitive-hash',
+            expires_at=timezone.now(),
+        )
+
+        self.assertIn(player.name, str(token))
+        self.assertNotIn(token.token_hash, str(token))
+
+
+class VisitorDemoTests(SimpleTestCase):
+    def test_visitor_route_serves_the_interactive_application_shell(self):
+        response = self.client.get('/visita/')
+        content = b''.join(response.streaming_content).decode()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('id="login-layout"', content)
+        self.assertIn('id="home-panel"', content)
+        self.assertIn('id="teacher-panel"', content)
+        self.assertIn('id="visitor-login-btn"', content)
+        self.assertNotIn('Estás navegando como visitante', content)
+        self.assertNotIn('visitor-mode-banner', content)
+        self.assertLess(
+            content.index('id="google-login-btn"'),
+            content.index('id="visitor-login-btn"'),
+        )
+        self.assertIn('components/boot.mjs', content)
+
+    def test_old_tour_url_remains_available(self):
+        response = self.client.get('/recorrido/')
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_real_management_still_requires_login(self):
+        response = self.client.get('/gestion/')
+
+        self.assertRedirects(response, '/gestion/login/?next=/gestion/')
+
+
+class VisitorDailyLeaderboardTests(TestCase):
+    def test_current_daily_leaderboard_is_public_and_returns_real_table_shape(self):
+        response = self.client.get('/api/daily-words/leaderboard/current')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(set(response.json()), {'dailyWordId', 'entries', 'message'})
+        self.assertIsNone(response.json()['dailyWordId'])
+        self.assertEqual(response.json()['entries'], [])
+
+
+class VisitorWordsTests(TestCase):
+    def test_public_visitor_words_returns_only_vocabulary_fields_from_database(self):
+        word = Word.objects.create(word='constelacion', difficulty='medium', theme='Espacio')
+
+        response = self.client.get('/api/visitor/words')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn({
+            'id': word.id,
+            'word': 'constelacion',
+            'difficulty': 'medium',
+            'theme': 'Espacio',
+        }, response.json())
+        self.assertTrue(all(set(row) == {'id', 'word', 'difficulty', 'theme'} for row in response.json()))
+        self.assertEqual(self.client.post('/api/visitor/words').status_code, 405)
 
 
 @override_settings(
@@ -433,10 +517,8 @@ class SecurityHardeningTests(TestCase):
             grade='',
             group_name='',
         )
-        animal_words = [
+        for i in range(5):
             Word.objects.create(word=f'animal{i}', difficulty='easy', theme='Animales')
-            for i in range(5)
-        ]
 
         response = self.client.post(
             '/api/words/prepare-game',

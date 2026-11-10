@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <title>Ahorcado UTVAM</title>
-  <link rel="stylesheet" href="/static/styles.css?v=20261021-google-auth" />
+  <link rel="stylesheet" href="/static/styles.css?v=20261110-remove-creator-credits" />
 </head>
 <body>
   <div class="particle-field" id="particle-field" aria-hidden="true"></div>
@@ -17,11 +17,13 @@
       <span>Ahorcado <strong>UTVAM</strong></span>
     </a>
     <div class="topbar-actions">
+      <a id="exit-visitor-mode" class="secondary-button hidden" href="/">Salir del modo visita</a>
       <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Cambiar tema" aria-pressed="false">
         <span class="theme-icon sun" aria-hidden="true">☀︎</span>
         <span class="theme-icon moon" aria-hidden="true">☾</span>
         <span class="theme-thumb" aria-hidden="true"></span>
       </button>
+      <a class="management-shortcut" href="/gestion/" aria-label="Ir al modo Gestión" title="Modo Gestión">⚙</a>
       <button class="settings-top-btn hidden" id="settings-btn" type="button" aria-label="Configuración">
         <span class="settings-mini-icon" aria-hidden="true"></span>
       </button>
@@ -64,6 +66,7 @@
               <button type="button" id="show-register-btn" class="secondary-button">Registrarse</button>
             </div>
             <button type="button" id="google-login-btn" class="google-auth-button">Continuar con Google</button>
+            <button type="button" id="visitor-login-btn" class="secondary-button">Entrar como visitante</button>
             <a class="password-recovery-link" href="/password-recovery.html">¿Olvidaste tu contraseña?</a>
           </form>
         </div>
@@ -82,7 +85,7 @@
     </div>
   </div>
 
-  <div class="ranking-filters" style="margin: 15px 0;">
+  <div class="ranking-filters">
     <div class="search-box">
       <input type="text" id="searchInput" placeholder="Buscar usuario..." aria-label="Buscar usuario">
     </div>
@@ -150,7 +153,7 @@
     <section class="panel hidden" id="game-panel">
       <div class="game-header">
         <div>
-          <span class="eyebrow">Ahorcado clásico</span><h2 id="game-status">Partida en juego</h2>
+          <span class="eyebrow">Ahorcado clásico</span><h2 id="game-status">Partida local de visita</h2>
           <p id="game-difficulty">Dificultad: fácil</p>
         </div>
         <div class="game-actions config-toolbar">
@@ -220,21 +223,11 @@
         </div>
       </form>
 
-      <div class="screen-credits" aria-label="Créditos de los creadores">
-        <span class="credits-title">Creadores:</span>
-        <div class="creator-credits">
-          <div class="creator-credit">
-            <img src="/static/assets/creators/joshua-torres.jpg" alt="Joshua Torres" />
-            <span>Joshua Torres · 5561042358</span>
-          </div>
-          <div class="creator-credit">
-            <img src="/static/assets/creators/diego-hernandez.jpg" alt="Diego Hernandez" />
-            <span>Diego Hernandez · 5575412997</span>
-          </div>
-        </div>
-      </div>
     </section>
     <section class="panel hidden" id="teacher-panel">
+      <div id="visitor-write-warning" class="visitor-write-warning hidden" role="note">
+        Vista de solo lectura: el banco de palabras usa datos reales. Las partidas son locales y no se guardan; las acciones de gestión están desactivadas.
+      </div>
       <div id="teacher-menu">
         <div class="teacher-panel-header">
           <span class="eyebrow">Herramientas de gestión</span>
@@ -532,6 +525,7 @@
 
   <script src="/static/components/theme.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script type="module" src="/static/app.mjs?v=20261022-google-password-settings"></script>
+  <link rel="stylesheet" href="/static/visitor-demo.css?v=20261110-visitor-db-words" />
+  <script type="module" src="/static/components/boot.mjs?v=20261110-visitor-db-words"></script>
 </body>
 </html>

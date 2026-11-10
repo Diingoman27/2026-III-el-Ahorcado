@@ -2,6 +2,7 @@ import json
 import random
 import re
 import unicodedata
+from logging import getLogger
 
 from django.db import IntegrityError, transaction
 from django.http import JsonResponse
@@ -11,6 +12,14 @@ from .api import body, endpoint, error, id_list, integer, word_data
 from .models import DailyWord, Word
 
 DIFFICULTIES = ('easy', 'medium', 'hard')
+logger = getLogger(__name__)
+
+
+def gemini_unavailable(exc, message):
+    logger.exception('Gemini no pudo generar palabras.')
+    if getattr(exc, 'code', None) == 504:
+        return error('Gemini tardó demasiado en responder. Inténtalo de nuevo.', 504)
+    return error(message, 502)
 
 
 def sanitize_word(value):
@@ -73,6 +82,12 @@ def words(request):
                          'word': word_data(instance)}, status=201)
 
 
+@endpoint(['GET'])
+def visitor_words(request):
+    rows = Word.objects.order_by('theme', 'word')
+    return JsonResponse([word_data(word) for word in rows], safe=False)
+
+
 @endpoint(['POST'], auth=True, teacher=True)
 def generate(request):
     data = body(request)
@@ -84,8 +99,8 @@ def generate(request):
         results, model = generated_words(theme, difficulty, count_from(data), request.player)
     except (ValueError, json.JSONDecodeError) as exc:
         return error(str(exc))
-    except Exception:
-        return error('Gemini no pudo generar palabras con los modelos disponibles.', 502)
+    except Exception as exc:
+        return gemini_unavailable(exc, 'Gemini no pudo generar palabras con los modelos disponibles.')
     if not results:
         return error('La IA no generó palabras válidas. Inténtalo de nuevo.', 404)
     return JsonResponse({'message': f'{len(results)} palabra(s) generadas y agregadas al banco.',
@@ -118,8 +133,8 @@ def prepare_game(request):
             results, model = generated_words(theme, difficulty, count, request.player)
         except ValueError as exc:
             return error(str(exc))
-        except Exception:
-            return error('Gemini no pudo generar palabras.', 502)
+        except Exception as exc:
+            return gemini_unavailable(exc, 'Gemini no pudo generar palabras.')
     else:
         return error('Selecciona un origen válido para las palabras.')
     if not results:

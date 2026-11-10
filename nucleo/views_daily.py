@@ -1,4 +1,4 @@
-from django.db import IntegrityError, transaction
+from django.db import transaction
 from django.db.models import F
 from django.http import JsonResponse
 from django.utils import timezone
@@ -79,3 +79,33 @@ def daily_leaderboard(request, daily_word_id):
                           'response_time_ms': row.response_time_ms, 'points_earned': row.points_earned,
                           'is_correct': row.is_correct, 'rank': index}
                          for index, row in enumerate(rows, 1)], safe=False)
+
+
+@endpoint(['GET'])
+def current_daily_leaderboard(request):
+    daily = DailyWord.objects.filter(
+        set_date=timezone.localdate(),
+        active=True,
+    ).order_by('-id').first()
+    if daily is None:
+        return JsonResponse({
+            'dailyWordId': None,
+            'entries': [],
+            'message': 'No hay palabra del día disponible.',
+        })
+
+    answers = DailyWordAnswer.objects.filter(
+        daily_word=daily,
+        is_correct=True,
+    ).select_related('player').order_by('-points_earned', 'response_time_ms')[:10]
+    entries = [
+        {
+            'id': answer.player_id,
+            'name': answer.player.name,
+            'points': answer.points_earned,
+            'responseTimeMs': answer.response_time_ms,
+            'rank': rank,
+        }
+        for rank, answer in enumerate(answers, 1)
+    ]
+    return JsonResponse({'dailyWordId': daily.id, 'entries': entries})
