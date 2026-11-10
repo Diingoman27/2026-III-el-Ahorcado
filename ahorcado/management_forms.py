@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 
 from nucleo.auth_integration import ROLE_GROUPS, sync_player_to_django_user
-from nucleo.models import Player
+from nucleo.models import ROLE_CHOICES, Player
 
 User = get_user_model()
 
@@ -16,8 +16,8 @@ class UserManagementForm(forms.ModelForm):
     username = forms.CharField(max_length=30, label='Nombre de usuario')
     email = forms.EmailField(max_length=100, label='Correo electrónico')
     player_role = forms.ChoiceField(
-        label='Rol principal', choices=(('student', 'Alumno'), ('teacher', 'Profesor')),
-        help_text='Este rol se aplica a la cuenta principal y a su grupo de Django.',
+        label='Rol principal', choices=ROLE_CHOICES,
+        help_text='Este rol se aplica a la cuenta principal y a su grupo de Django. Supervisor = solo lectura.',
     )
     player_grade = forms.CharField(label='Grado', max_length=30, required=False)
     player_group = forms.CharField(label='Grupo escolar', max_length=20, required=False)

@@ -7,7 +7,7 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, T
 
 from ahorcado.forms import PermissionForm
 from ahorcado.management_forms import GroupManagementForm, PlayerManagementForm, UserManagementForm
-from nucleo.auth_integration import sync_all_players_to_django_users
+from nucleo.auth_integration import ROLE_LABELS, sync_all_players_to_django_users
 from nucleo import models as core_models
 
 User = get_user_model()
@@ -35,7 +35,7 @@ class ProtectedManagementView(LoginRequiredMixin, PermissionRequiredMixin):
                 player = core_models.Player.objects.filter(django_user=self.object).first()
                 if player:
                     context['object_fields'].extend([
-                        ('Rol principal', {'student': 'Alumno', 'teacher': 'Profesor'}.get(player.role, '—')),
+                        ('Rol principal', ROLE_LABELS.get(player.role, '—')),
                         ('Grado', player.grade or '—'),
                         ('Grupo escolar', player.group_name or '—'),
                     ])
@@ -68,7 +68,7 @@ class ManagementListView(ListView):
         context['fields'] = [field for field in self.model._meta.fields
                              if field.name not in {'password', 'token_hash', 'supabase_user_id'}]
         if self.model is User:
-            role_names = {'student': 'Alumno', 'teacher': 'Profesor'}
+            role_names = ROLE_LABELS
             profiles = {player.django_user_id: player for player in core_models.Player.objects.filter(
                 django_user_id__in=[row.pk for row in context['object_list']]
             )}

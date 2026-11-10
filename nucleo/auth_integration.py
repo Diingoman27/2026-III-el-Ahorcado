@@ -1,9 +1,32 @@
 """Keep the main Player accounts and Django Auth identities in sync."""
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, Permission
 from django.db import transaction
 
-ROLE_GROUPS = {'student': 'Alumno', 'teacher': 'Profesor'}
+ROLE_GROUPS = {'student': 'Alumno', 'teacher': 'Profesor', 'supervisor': 'Supervisor'}
+ROLE_LABELS = {'student': 'Alumno', 'teacher': 'Profesor', 'supervisor': 'Supervisor'}
+
+# Apps whose permissions can be managed from the management panel.
+MANAGED_PERMISSION_APPS = ('core', 'auth')
+
+
+def managed_permissions():
+    return Permission.objects.filter(
+        content_type__app_label__in=MANAGED_PERMISSION_APPS
+    ).select_related('content_type')
+
+
+def read_only_permissions():
+    """Permissions a supervisor may hold: only `view_*` (lectura)."""
+    return managed_permissions().filter(codename__startswith='view_')
+
+
+def ensure_role_groups():
+    """Create the role groups; the Supervisor group always gets every read permission."""
+    groups = {role: Group.objects.get_or_create(name=name)[0] for role, name in ROLE_GROUPS.items()}
+    supervisor = groups['supervisor']
+    supervisor.permissions.set(read_only_permissions())
+    return groups
 
 
 @transaction.atomic
@@ -34,9 +57,14 @@ def sync_player_to_django_user(player, raw_password=None):
 
     role_name = ROLE_GROUPS.get(player.role)
     if role_name:
-        role_group, _ = Group.objects.get_or_create(name=role_name)
+        role_group, created = Group.objects.get_or_create(name=role_name)
+        if created and player.role == 'supervisor':
+            role_group.permissions.set(read_only_permissions())
         user.groups.remove(*Group.objects.filter(name__in=ROLE_GROUPS.values()).exclude(pk=role_group.pk))
         user.groups.add(role_group)
+        if player.role == 'supervisor':
+            # A supervisor is read-only: drop any direct write permission.
+            user.user_permissions.remove(*user.user_permissions.exclude(codename__startswith='view_'))
 
     return user
 

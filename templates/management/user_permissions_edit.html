@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+{% block title %}Permisos de {{ target.get_username }} · Gestión{% endblock %}
+{% block content %}
+<section class="panel pm-panel">
+  <a class="pm-back" href="{% url 'user_permissions_list' %}{% if role %}?rol={{ role }}{% endif %}">← Usuarios</a>
+
+  <header class="pm-header">
+    <span class="up-avatar pm-avatar" aria-hidden="true">{{ target.get_username|slice:":1"|upper }}</span>
+    <div class="pm-identity">
+      <h1>{{ target.get_full_name|default:target.get_username }}</h1>
+      <p>
+        {% if target.is_superuser %}<span class="up-role up-role-admin">Superusuario</span>
+        {% else %}<span class="up-role up-role-{{ role|default:'gestion' }}">{{ role_label }}</span>{% endif %}
+        <span>@{{ target.get_username }}</span>
+        {% if target.email %}<span class="pm-dot" aria-hidden="true">·</span><span>{{ target.email }}</span>{% endif %}
+        {% if not target.is_active %}<span class="pm-dot" aria-hidden="true">·</span><span class="pm-inactive">Cuenta inactiva</span>{% endif %}
+      </p>
+    </div>
+  </header>
+
+  <dl class="pm-stats">
+    <div><dt>Permisos activos</dt><dd><strong id="stat-direct">{{ direct_count }}</strong><span> / {{ total_permissions }}</span></dd></div>
+    <div><dt>Módulos con acceso</dt><dd><strong id="stat-modules">0</strong><span> / {{ module_count }}</span></dd></div>
+    <div><dt>Heredados de grupo</dt><dd><strong>{{ inherited_count }}</strong><span>{% if groups %} · {{ groups|join:", " }}{% endif %}</span></dd></div>
+    <div><dt>Último acceso</dt><dd><strong class="pm-stat-text">{% if target.last_login %}{{ target.last_login|date:"j M Y, H:i" }}{% else %}Nunca{% endif %}</strong></dd></div>
+  </dl>
+
+  {% if target.is_superuser %}
+    <p class="pm-note">Un superusuario ya tiene todos los permisos.</p>
+  {% elif not can_edit %}
+    <p class="pm-note">Vista de solo lectura · solo un superusuario puede asignar permisos.</p>
+  {% endif %}
+  {% if role == 'supervisor' %}
+    <p class="pm-note pm-note-warn">Supervisor: solo lectura. Crear, editar y eliminar están bloqueados.</p>
+  {% endif %}
+
+  <form method="post" id="pm-form">
+    {% csrf_token %}
+    <div class="pm-toolbar">
+      <div class="up-search-field">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <label class="visually-hidden" for="perm-search">Buscar permiso</label>
+        <input type="search" id="perm-search" placeholder="Buscar módulo o acción…" autocomplete="off">
+      </div>
+      <label class="pm-filter">
+        <input type="checkbox" class="switch switch-sm" role="switch" id="only-checked">
+        <span>Solo activos</span>
+      </label>
+    </div>
+
+    <div class="pm-matrix">
+      {% for section in sections %}
+      <div class="pm-section" data-section>
+        <div class="pm-row pm-head">
+          <div class="pm-section-info">
+            <span class="pm-section-title">{{ section.label }}</span>
+            {% if section.description %}<small>{{ section.description }}</small>{% endif %}
+          </div>
+          {% for action in actions %}<span class="pm-col" title="{{ action.help }}">{{ action.label }}</span>{% endfor %}
+          <label class="pm-col pm-col-all" title="Activar o quitar todos los permisos de {{ section.label }}">
+            <span>Todos</span>
+            <input type="checkbox" class="switch switch-sm" role="switch" data-section-master
+                   aria-label="Todos los permisos de {{ section.label }}" {% if not can_edit %}disabled{% endif %}>
+          </label>
+        </div>
+        {% for module in section.modules %}
+        <div class="pm-row" data-row data-search="{{ module.label|lower }} {{ module.model }} {{ module.description|lower }}">
+          <div class="pm-module">
+            <div class="pm-module-name">
+              <span>{{ module.label }}</span>
+              <span class="pm-level" data-level></span>
+            </div>
+            {% if module.description %}<small>{{ module.description }}</small>{% endif %}
+          </div>
+          {% for cell in module.cells %}
+            {% if cell %}
+            <label class="pm-cell{% if not cell.allowed %} is-locked{% endif %}"
+                   data-cell data-action="{{ cell.action }}" data-inherited="{% if cell.inherited_from %}1{% endif %}"
+                   data-search="{{ cell.label|lower }} {{ cell.perm.codename }}"
+                   title="{{ cell.label }}{% if cell.inherited_from %} · ya incluido por el grupo {{ cell.inherited_from }}{% endif %}{% if not cell.allowed %} · bloqueado (solo lectura){% endif %}">
+              <input type="checkbox" class="switch" role="switch" name="permissions" value="{{ cell.perm.pk }}"
+                     {% if cell.checked %}checked{% endif %}
+                     {% if not can_edit or not cell.allowed %}disabled{% endif %}>
+              <span class="visually-hidden">{{ cell.label }}</span>
+              {% if cell.inherited_from %}<span class="pm-inherited" aria-hidden="true"></span>{% endif %}
+            </label>
+            {% else %}<span class="pm-cell" aria-hidden="true"></span>{% endif %}
+          {% endfor %}
+          <label class="pm-cell pm-cell-all" title="Activar o quitar los 4 permisos de {{ module.label }}">
+            <input type="checkbox" class="switch" role="switch" data-row-master
+                   aria-label="Todos los permisos de {{ module.label }}"
+                   {% if not can_edit or not module.has_allowed %}disabled{% endif %}>
+          </label>
+        </div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+      <p class="pm-empty hidden" id="pm-empty">Sin resultados.</p>
+    </div>
+
+    <footer class="pm-footer">
+      {% if inherited_count %}<span class="pm-legend"><span class="pm-inherited" aria-hidden="true"></span> Incluido por su grupo ({{ groups|join:", " }})</span>
+      {% else %}<span class="pm-legend">Pasa el cursor sobre un interruptor para ver qué permite.</span>{% endif %}
+      {% if can_edit %}
+      <div class="pm-save">
+        <span class="pm-dirty hidden" id="pm-dirty">Cambios sin guardar</span>
+        <button type="submit">Guardar</button>
+      </div>
+      {% endif %}
+    </footer>
+  </form>
+</section>
+
+<script>
+(() => {
+  const form = document.getElementById('pm-form');
+  const search = document.getElementById('perm-search');
+  const onlyChecked = document.getElementById('only-checked');
+  const empty = document.getElementById('pm-empty');
+  const dirty = document.getElementById('pm-dirty');
+  const statDirect = document.getElementById('stat-direct');
+  const statModules = document.getElementById('stat-modules');
+  const sections = [...form.querySelectorAll('[data-section]')];
+  const rows = [...form.querySelectorAll('[data-row]')];
+  const permBoxes = [...form.querySelectorAll('input[name="permissions"]')];
+  const initial = permBoxes.map((box) => box.checked).join();
+  const normalize = (text) => text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+  const editable = (scope) => [...scope.querySelectorAll('input[name="permissions"]:not(:disabled)')];
+
+  function setMaster(master, boxes) {
+    const on = boxes.filter((box) => box.checked).length;
+    master.checked = boxes.length > 0 && on === boxes.length;
+    master.indeterminate = on > 0 && on < boxes.length;
+  }
+
+  function level(row) {
+    const has = (action) => {
+      const cell = row.querySelector(`[data-cell][data-action="${action}"]`);
+      return !!cell && (cell.querySelector('input').checked || cell.dataset.inherited === '1');
+    };
+    const writes = ['add', 'change', 'delete'].filter(has).length;
+    if (has('view') && writes === 3) return ['Acceso total', 'full'];
+    if (has('view') && writes > 0) return ['Lectura y escritura', 'write'];
+    if (has('view')) return ['Solo lectura', 'read'];
+    if (writes > 0) return ['Parcial', 'write'];
+    return ['Sin acceso', 'none'];
+  }
+
+  function refresh() {
+    let modulesWithAccess = 0;
+    rows.forEach((row) => {
+      const [text, kind] = level(row);
+      const badge = row.querySelector('[data-level]');
+      badge.textContent = text;
+      badge.dataset.kind = kind;
+      if (kind !== 'none') modulesWithAccess += 1;
+      setMaster(row.querySelector('[data-row-master]'), editable(row));
+    });
+    sections.forEach((section) => setMaster(section.querySelector('[data-section-master]'), editable(section)));
+    statDirect.textContent = permBoxes.filter((box) => box.checked).length;
+    statModules.textContent = modulesWithAccess;
+    dirty?.classList.toggle('hidden', permBoxes.map((box) => box.checked).join() === initial);
+  }
+
+  function applyFilter() {
+    const terms = normalize(search.value).split(/\s+/).filter(Boolean);
+    let total = 0;
+    sections.forEach((section) => {
+      let visibleRows = 0;
+      section.querySelectorAll('[data-row]').forEach((row) => {
+        const cells = [...row.querySelectorAll('[data-cell]')];
+        const matches = cells.map((cell) => terms.every((term) => normalize(cell.dataset.search).includes(term)));
+        const moduleMatch = terms.every((term) => normalize(row.dataset.search).includes(term));
+        const anyChecked = cells.some((cell) => cell.querySelector('input').checked);
+        const show = (moduleMatch || matches.some(Boolean)) && (!onlyChecked.checked || anyChecked);
+        cells.forEach((cell, index) => cell.classList.toggle('is-dim', terms.length > 0 && !moduleMatch && !matches[index]));
+        row.hidden = !show;
+        if (show) visibleRows += 1;
+      });
+      section.hidden = visibleRows === 0;
+      total += visibleRows;
+    });
+    empty.classList.toggle('hidden', total > 0);
+  }
+
+  form.addEventListener('change', (event) => {
+    const target = event.target;
+    if (target.matches('[data-row-master]')) {
+      editable(target.closest('[data-row]')).forEach((box) => { box.checked = target.checked; });
+    } else if (target.matches('[data-section-master]')) {
+      editable(target.closest('[data-section]')).forEach((box) => { box.checked = target.checked; });
+    }
+    refresh();
+    if (onlyChecked.checked) applyFilter();
+  });
+  search.addEventListener('input', applyFilter);
+  search.addEventListener('keydown', (event) => { if (event.key === 'Enter') event.preventDefault(); });
+  onlyChecked.addEventListener('change', applyFilter);
+  window.addEventListener('beforeunload', (event) => {
+    if (dirty && !dirty.classList.contains('hidden') && !form.dataset.submitting) event.preventDefault();
+  });
+  form.addEventListener('submit', () => { form.dataset.submitting = '1'; });
+  refresh();
+  applyFilter();
+})();
+</script>
+{% endblock %}

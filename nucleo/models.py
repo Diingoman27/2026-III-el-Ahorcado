@@ -6,6 +6,9 @@ from django.utils import timezone
 
 DIFFICULTIES = [('easy', 'Fácil'), ('medium', 'Media'), ('hard', 'Difícil')]
 
+ROLE_CHOICES = [('student', 'Alumno'), ('teacher', 'Profesor'), ('supervisor', 'Supervisor')]
+
+
 class Player(models.Model):
     django_user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -21,7 +24,7 @@ class Player(models.Model):
     is_active = models.BooleanField(default=True)
     supabase_user_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
     password = models.CharField(max_length=200, default='')
-    role = models.CharField(max_length=10, choices=[('student', 'Alumno'), ('teacher', 'Profesor')], default='student')
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='student')
     grade = models.CharField(max_length=30, blank=True, default='')
     group_name = models.CharField(max_length=20, blank=True, default='')
     score = models.IntegerField(default=0)

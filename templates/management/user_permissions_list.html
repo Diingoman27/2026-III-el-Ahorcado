@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Usuarios y permisos · Gestión{% endblock %}
+{% block content %}
+<section class="panel up-panel">
+  <div class="management-heading">
+    <div>
+      <div class="eyebrow">Control de acceso</div>
+      <h1>Usuarios y <span>permisos</span></h1>
+      <p class="lede">Elige una cuenta para asignarle permisos. Los supervisores solo pueden tener permisos de lectura.</p>
+    </div>
+    <a class="secondary-button" href="{% url 'management_home' %}">← Gestión</a>
+  </div>
+
+  <nav class="up-tabs" aria-label="Filtrar por rol">
+    {% for tab in role_tabs %}
+      <a class="up-tab{% if tab.active %} is-active{% endif %}"
+         href="?{% if tab.value %}rol={{ tab.value }}{% endif %}{% if query %}{% if tab.value %}&amp;{% endif %}q={{ query|urlencode }}{% endif %}"
+         {% if tab.active %}aria-current="page"{% endif %}>
+        {{ tab.label }} <span class="up-tab-count">{{ tab.count }}</span>
+      </a>
+    {% endfor %}
+  </nav>
+
+  <form method="get" class="up-search" role="search">
+    {% if current_role %}<input type="hidden" name="rol" value="{{ current_role }}">{% endif %}
+    <label class="visually-hidden" for="user-search">Buscar usuario</label>
+    <input type="search" id="user-search" name="q" value="{{ query }}" placeholder="Buscar por usuario, nombre o correo…" autocomplete="off">
+    <button type="submit">Buscar</button>
+    {% if query %}<a class="secondary-button" href="?{% if current_role %}rol={{ current_role }}{% endif %}">Limpiar</a>{% endif %}
+  </form>
+
+  <div class="tabla-contenedor">
+    <table class="crud-table up-table">
+      <thead>
+        <tr><th>Usuario</th><th>Rol</th><th>Grupo escolar</th><th>Permisos directos</th><th>Estado</th><th><span class="visually-hidden">Acciones</span></th></tr>
+      </thead>
+      <tbody>
+      {% for row in rows %}
+        <tr>
+          <td>
+            <div class="up-user">
+              <span class="up-avatar" aria-hidden="true">{{ row.user.get_username|slice:":1"|upper }}</span>
+              <span>
+                <strong>{{ row.user.get_full_name|default:row.user.get_username }}</strong>
+                <small>@{{ row.user.get_username }}{% if row.user.email %} · {{ row.user.email }}{% endif %}</small>
+              </span>
+            </div>
+          </td>
+          <td>
+            {% if row.user.is_superuser %}<span class="up-role up-role-admin">Superusuario</span>
+            {% else %}<span class="up-role up-role-{{ row.role|default:'gestion' }}">{{ row.role_label }}</span>{% endif %}
+          </td>
+          <td>{% if row.role == 'student' %}{{ row.user.player_profile.grade }} {{ row.user.player_profile.group_name }}{% else %}—{% endif %}</td>
+          <td>{% if row.user.is_superuser %}Todos{% else %}{{ row.user.direct_permission_count }}{% endif %}</td>
+          <td>{% if row.user.is_active %}<span class="up-status up-status-on">Activo</span>{% else %}<span class="up-status">Inactivo</span>{% endif %}</td>
+          <td class="acciones-fila"><a class="btn-tabla btn-tabla-editar" href="{% url 'user_permissions_edit' row.user.pk %}">{% if request.user.is_superuser and not row.user.is_superuser %}Asignar permisos{% else %}Ver permisos{% endif %}</a></td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="6" class="permission-empty-cell">No hay usuarios que coincidan con el filtro.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if is_paginated %}
+  <nav class="paginacion" aria-label="Paginación">
+    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}{% if current_role %}&amp;rol={{ current_role }}{% endif %}{% if query %}&amp;q={{ query|urlencode }}{% endif %}">Anterior</a>{% endif %}
+    <span class="actual">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}{% if current_role %}&amp;rol={{ current_role }}{% endif %}{% if query %}&amp;q={{ query|urlencode }}{% endif %}">Siguiente</a>{% endif %}
+  </nav>
+  {% endif %}
+</section>
+{% endblock %}
