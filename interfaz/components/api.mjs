@@ -95,6 +95,10 @@ export async function loadWordsForTeacher() {
   return apiFetch('/api/words');
 }
 
+export async function loadVisitorWords() {
+  return apiFetch('/api/visitor/words');
+}
+
 export async function setDailyWord(payload) {
   const body = typeof payload === 'object' && payload !== null ? payload : { wordId: payload };
   return apiFetch('/api/daily-words', {
@@ -116,4 +120,8 @@ export async function submitDailyChallengeAnswer(dailyWordId, answerLetter) {
 
 export async function loadDailyChallengeLeaderboard(dailyWordId) {
   return apiFetch(`/api/daily-words/leaderboard/${dailyWordId}`);
+}
+
+export async function loadCurrentDailyChallengeLeaderboard() {
+  return apiFetch('/api/daily-words/leaderboard/current');
 }

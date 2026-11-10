@@ -9,6 +9,10 @@ def index(request):
     return FileResponse((settings.BASE_DIR / 'interfaz/index.html').open('rb'), content_type='text/html')
 
 
+def visitor_demo(request):
+    return FileResponse((settings.BASE_DIR / 'interfaz/index.html').open('rb'), content_type='text/html')
+
+
 def register_page(request):
     return FileResponse((settings.BASE_DIR / 'interfaz/register.html').open('rb'), content_type='text/html')
 

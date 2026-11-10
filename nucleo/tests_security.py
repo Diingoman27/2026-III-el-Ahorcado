@@ -43,6 +43,62 @@ class ManagementSafetyTests(SimpleTestCase):
         self.assertNotIn(token.token_hash, str(token))
 
 
+class VisitorDemoTests(SimpleTestCase):
+    def test_visitor_route_serves_the_interactive_application_shell(self):
+        response = self.client.get('/visita/')
+        content = b''.join(response.streaming_content).decode()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('id="login-layout"', content)
+        self.assertIn('id="home-panel"', content)
+        self.assertIn('id="teacher-panel"', content)
+        self.assertIn('id="visitor-login-btn"', content)
+        self.assertNotIn('Estás navegando como visitante', content)
+        self.assertNotIn('visitor-mode-banner', content)
+        self.assertLess(
+            content.index('id="google-login-btn"'),
+            content.index('id="visitor-login-btn"'),
+        )
+        self.assertIn('components/boot.mjs', content)
+
+    def test_old_tour_url_remains_available(self):
+        response = self.client.get('/recorrido/')
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_real_management_still_requires_login(self):
+        response = self.client.get('/gestion/')
+
+        self.assertRedirects(response, '/gestion/login/?next=/gestion/')
+
+
+class VisitorDailyLeaderboardTests(TestCase):
+    def test_current_daily_leaderboard_is_public_and_returns_real_table_shape(self):
+        response = self.client.get('/api/daily-words/leaderboard/current')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(set(response.json()), {'dailyWordId', 'entries', 'message'})
+        self.assertIsNone(response.json()['dailyWordId'])
+        self.assertEqual(response.json()['entries'], [])
+
+
+class VisitorWordsTests(TestCase):
+    def test_public_visitor_words_returns_only_vocabulary_fields_from_database(self):
+        word = Word.objects.create(word='constelacion', difficulty='medium', theme='Espacio')
+
+        response = self.client.get('/api/visitor/words')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn({
+            'id': word.id,
+            'word': 'constelacion',
+            'difficulty': 'medium',
+            'theme': 'Espacio',
+        }, response.json())
+        self.assertTrue(all(set(row) == {'id', 'word', 'difficulty', 'theme'} for row in response.json()))
+        self.assertEqual(self.client.post('/api/visitor/words').status_code, 405)
+
+
 @override_settings(
     EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
     EMAIL_HOST='smtp.test',

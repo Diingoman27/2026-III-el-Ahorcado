@@ -1,0 +1,43 @@
+.visitor-write-warning {
+  width: min(960px, calc(100% - 32px));
+  box-sizing: border-box;
+  margin: 12px auto -4px;
+  padding: 10px 16px;
+  border: 1px solid rgba(86, 214, 201, 0.4);
+  border-radius: 14px;
+  background: rgba(14, 116, 108, 0.12);
+  color: var(--text);
+  font-size: 0.86rem;
+  text-align: center;
+}
+
+.visitor-demo .management-shortcut {
+  display: none;
+}
+
+.visitor-demo #exit-visitor-mode {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 13px;
+  border-radius: 12px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.visitor-demo .teacher-module form button[type="submit"],
+.visitor-demo #delete-account-form button[type="submit"] {
+  opacity: 0.55;
+}
+
+.visitor-demo .teacher-module form button[type="submit"]:disabled,
+.visitor-demo #delete-account-form button[type="submit"]:disabled {
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (max-width: 640px) {
+  .visitor-write-warning {
+    width: calc(100% - 20px);
+  }
+}
