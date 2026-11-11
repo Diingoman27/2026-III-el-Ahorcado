@@ -1,11 +1,22 @@
 """Modelos compatibles con las tablas PostgreSQL de la aplicación anterior."""
 from django.contrib.postgres.fields import ArrayField
+from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
 DIFFICULTIES = [('easy', 'Fácil'), ('medium', 'Media'), ('hard', 'Difícil')]
 
+ROLE_CHOICES = [('student', 'Alumno'), ('teacher', 'Profesor'), ('supervisor', 'Supervisor')]
+
+
 class Player(models.Model):
+    django_user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name='player_profile',
+    )
     name = models.CharField(max_length=50, unique=True)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
@@ -13,7 +24,7 @@ class Player(models.Model):
     is_active = models.BooleanField(default=True)
     supabase_user_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
     password = models.CharField(max_length=200, default='')
-    role = models.CharField(max_length=10, choices=[('student', 'Alumno'), ('teacher', 'Profesor')], default='student')
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='student')
     grade = models.CharField(max_length=30, blank=True, default='')
     group_name = models.CharField(max_length=20, blank=True, default='')
     score = models.IntegerField(default=0)

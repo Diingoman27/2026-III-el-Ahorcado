@@ -7,6 +7,13 @@
       <p class="lede">Sesión de Django: {{ request.user.get_username }}.</p></div>
     <form method="post" action="{% url 'django_logout' %}">{% csrf_token %}<button type="submit" class="secondary-button">Cerrar sesión de gestión</button></form>
   </div>
+  {% if perms.auth.view_user %}
+  <a class="management-feature" href="{% url 'user_permissions_list' %}">
+    <span class="management-feature-icon" aria-hidden="true">🔐</span>
+    <span><strong>Usuarios y permisos</strong><small>Filtra docentes, alumnos y supervisores y asigna permisos a cada cuenta.</small></span>
+    <span class="management-feature-arrow" aria-hidden="true">→</span>
+  </a>
+  {% endif %}
   <div class="home-actions">
     {% for resource in resources %}
       <a class="action-btn" href="{% url resource.list_url %}">{{ resource.label }}</a>
