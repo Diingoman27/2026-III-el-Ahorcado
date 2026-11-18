@@ -315,6 +315,8 @@ class SecurityHardeningTests(TestCase):
             patch('nucleo.views_auth.verify_supabase_access_token', return_value=(supabase_user, None)),
             patch.object(Player.objects, 'filter', side_effect=filter_with_concurrent_player),
             patch.object(Player.objects, 'create', side_effect=IntegrityError('concurrent unique insert')),
+            # The concurrent player only exists in memory, so skip the Django Auth sync.
+            patch('nucleo.views_auth.sync_player_to_django_user'),
         ):
             response = self.client.post(
                 '/api/auth/google',

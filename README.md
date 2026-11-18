@@ -67,6 +67,8 @@ Para Gmail, usa `EMAIL_HOST=smtp.gmail.com`, `EMAIL_PORT=587`, `EMAIL_USE_TLS=tr
 
 En desarrollo local, si `DEBUG=true` y no se configura `EMAIL_HOST`, las solicitudes de recuperación usan el backend de consola: el enlace se imprime en la terminal donde corre Django. Después de editar `.env`, reinicia el servidor para que Django cargue las variables. Nunca se expone el token de recuperación en la respuesta de la API.
 
+Si Django muestra un error de autenticación al conectar con PostgreSQL, revisa las credenciales de `DATABASE_URL` o de las variables `DB_USER` y `DB_PASSWORD`, y actualiza los secretos del proveedor de despliegue. No publiques ni compartas esas credenciales.
+
 ```dotenv
 SUPABASE_URL=https://<PROJECT_REF>.supabase.co
 SUPABASE_KEY=<clave_publica_anon_o_publishable>

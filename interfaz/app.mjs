@@ -55,10 +55,12 @@ const elements = {
   teacherPanel: document.getElementById('teacher-panel'),
   speedChallengePanel: document.getElementById('speed-challenge-panel'),
   welcomeName: document.getElementById('welcome-name'),
+  welcomeAvatar: document.getElementById('welcome-avatar'),
   playGameBtn: document.getElementById('play-game-btn'),
   speedChallengeBtn: document.getElementById('speed-challenge-btn'),
   teacherBtn: document.getElementById('teacher-btn'),
   settingsBtn: document.getElementById('settings-btn'),
+  managementShortcut: document.getElementById('management-shortcut'),
   logoutBtn: document.getElementById('logout-btn'),
   settingsLogoutBtn: document.getElementById('settings-logout-btn'),
   backToHomeBtn: document.getElementById('back-to-home-btn'),
@@ -224,9 +226,18 @@ async function setUserSession(data) {
   showPanel(elements.gamePanel, false);
   showPanel(elements.teacherPanel, false);
   showPanel(elements.speedChallengePanel, false);
+  elements.managementShortcut?.classList.add('hidden');
 
-  if (elements.welcomeName) {
-    elements.welcomeName.textContent = data.user.name;
+  const displayName = typeof data.user.name === 'string' ? data.user.name.trim() : '';
+  if (elements.welcomeName) elements.welcomeName.textContent = displayName;
+  if (elements.welcomeAvatar) {
+    elements.welcomeAvatar.textContent = displayName
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => Array.from(part)[0])
+      .join('')
+      .toLocaleUpperCase('es') || 'f';
   }
   elements.settingsBtn?.classList.remove('hidden');
 
@@ -248,6 +259,7 @@ function logout() {
   clearStoredSession();
   setState({ token: null, user: null });
   elements.settingsBtn?.classList.add('hidden');
+  elements.managementShortcut?.classList.remove('hidden');
   showPanel(elements.loginLayout, true);
   showPanel(elements.homePanel, false);
   showPanel(elements.settingsPanel, false);
@@ -318,6 +330,11 @@ if (elements.registerForm) {
     elements.registerChoice.classList.add('hidden');
     elements.registerForm.classList.remove('hidden');
     elements.registerDescription.textContent = 'Completa el formulario para crear tu cuenta.';
+    elements.registerPasswordConfirmation.required = true;
+    elements.googlePasswordConfirmation.classList.remove('hidden');
+    elements.googlePasswordRequirements.textContent = 'De 12 a 72 caracteres, con mayúsculas, minúsculas y números.';
+    elements.googlePasswordRequirements.classList.remove('hidden');
+    elements.registerUsername.focus();
   });
 
   let googleRegistrationProfile = null;
@@ -349,6 +366,7 @@ if (elements.registerForm) {
         elements.googlePasswordRequirements.classList.remove('hidden');
         elements.registerFormBtn.textContent = 'Completar registro y entrar';
         elements.googleRegisterRetryBtn.textContent = 'Volver a autorizar con Google';
+        elements.googleRegisterRetryBtn.classList.remove('hidden');
       }
     }
   } catch (error) {
@@ -386,6 +404,10 @@ if (elements.registerForm) {
 
   elements.registerEmail?.addEventListener('input', validateRegistrationEmail);
   elements.registerEmail?.addEventListener('blur', validateRegistrationEmail);
+  elements.registerPasswordConfirmation?.addEventListener('input', () => {
+    elements.registerPasswordConfirmation.setCustomValidity('');
+  });
+
   elements.registerForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     validateRegistrationEmail();
@@ -403,15 +425,16 @@ if (elements.registerForm) {
       group_name: elements.registerGroup?.value.trim() || '',
     };
 
+    if (elements.registerPassword.value !== elements.registerPasswordConfirmation.value) {
+      elements.registerPasswordConfirmation.setCustomValidity('Las contraseñas no coinciden.');
+      elements.registerPasswordConfirmation.reportValidity();
+      return;
+    }
+    elements.registerPasswordConfirmation.setCustomValidity('');
+
     let response;
     let data;
     if (googleRegistrationProfile) {
-      if (elements.registerPassword.value !== elements.registerPasswordConfirmation.value) {
-        elements.registerPasswordConfirmation.setCustomValidity('Las contraseñas no coinciden.');
-        elements.registerPasswordConfirmation.reportValidity();
-        return;
-      }
-      elements.registerPasswordConfirmation.setCustomValidity('');
       payload.password = elements.registerPassword.value;
       try {
         data = await registerWithGoogle(payload);

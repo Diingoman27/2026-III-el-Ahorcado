@@ -163,10 +163,34 @@ else:
         database['OPTIONS'] = database_options
     DATABASES = {'default': database}
 
+SUPABASE_PROJECT_REF = 'vhsqyvppeljmbpizzyjp'
 SUPABASE_URL = (
-    setting('SUPABASE_URL') or 'https://vhsqyvppeljmbpizzyjp.supabase.co'
+    setting('SUPABASE_URL') or f'https://{SUPABASE_PROJECT_REF}.supabase.co'
 ).strip().rstrip('/')
 SUPABASE_KEY = setting('SUPABASE_KEY').strip()
+
+RETIRED_SUPABASE_REFS = ('izloztttkwcdfrxkqocb', 'ciassthcelqvmjdajnyt')
+
+
+def _supabase_key_ref(key):
+    """Return the project ref embedded in a legacy (JWT) Supabase key, if any."""
+    import base64
+
+    try:
+        payload = key.split('.')[1]
+        payload += '=' * (-len(payload) % 4)
+        ref = json.loads(base64.urlsafe_b64decode(payload)).get('ref')
+    except (IndexError, ValueError, AttributeError):
+        return None
+    return ref if isinstance(ref, str) and ref.isalnum() else None
+
+
+# The browser client needs URL and key from the same project, or Google login fails.
+_key_ref = _supabase_key_ref(SUPABASE_KEY)
+if _key_ref and urlparse(SUPABASE_URL).hostname != f'{_key_ref}.supabase.co':
+    SUPABASE_URL = f'https://{_key_ref}.supabase.co'
+elif any(ref in SUPABASE_URL for ref in RETIRED_SUPABASE_REFS):
+    SUPABASE_URL = f'https://{SUPABASE_PROJECT_REF}.supabase.co'
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'interfaz']
